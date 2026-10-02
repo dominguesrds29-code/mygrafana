@@ -1,0 +1,83 @@
+{
+  "id": "server_metrics",
+  "title": "Métricas de Performance & Gráficos",
+  "description": "Visualização de gráficos temporais, gauges e medidores de performance de infraestrutura",
+  "refresh_interval": 20,
+  "columns": 12,
+  "created_at": 1727870400,
+  "updated_at": 1727870400,
+  "widgets": [
+    {
+      "id": "w_gauge_cpu",
+      "type": "gauge",
+      "title": "Uso Médio de Processamento",
+      "x": 0,
+      "y": 0,
+      "w": 4,
+      "h": 3,
+      "config": {
+        "search_item": "CPU utilization",
+        "unit": "%",
+        "thresholds": [70, 90]
+      }
+    },
+    {
+      "id": "w_gauge_ram",
+      "type": "gauge",
+      "title": "Uso de Memória RAM",
+      "x": 4,
+      "y": 0,
+      "w": 4,
+      "h": 3,
+      "config": {
+        "search_item": "Memory utilization",
+        "unit": "%",
+        "thresholds": [75, 90]
+      }
+    },
+    {
+      "id": "w_gauge_disk",
+      "type": "gauge",
+      "title": "Espaço em Disco / Root",
+      "x": 8,
+      "y": 0,
+      "w": 4,
+      "h": 3,
+      "config": {
+        "search_item": "Space utilization",
+        "unit": "%",
+        "thresholds": [80, 95]
+      }
+    },
+    {
+      "id": "w_chart_cpu",
+      "type": "graph",
+      "title": "📈 Histórico de CPU (Última Hora)",
+      "x": 0,
+      "y": 3,
+      "w": 6,
+      "h": 4,
+      "config": {
+        "search_item": "CPU utilization",
+        "chart_type": "area",
+        "history_limit": 60,
+        "color": "#38bdf8"
+      }
+    },
+    {
+      "id": "w_chart_traffic",
+      "type": "graph",
+      "title": "🌐 Tráfego de Rede (Bits Recebidos/Enviados)",
+      "x": 6,
+      "y": 3,
+      "w": 6,
+      "h": 4,
+      "config": {
+        "search_item": "Bits received",
+        "chart_type": "line",
+        "history_limit": 60,
+        "color": "#10b981"
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "id": "noc_overview",
+  "title": "Visão Geral NOC - Zabbix 7.0",
+  "description": "Painel centralizado de monitoramento de incidentes, disponibilidade e métricas críticas",
+  "refresh_interval": 15,
+  "columns": 12,
+  "created_at": 1727870400,
+  "updated_at": 1727870400,
+  "widgets": [
+    {
+      "id": "w_clock",
+      "type": "clock",
+      "title": "Horário Operacional NOC",
+      "x": 0,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "show_utc": true
+      }
+    },
+    {
+      "id": "w_summary_hosts",
+      "type": "stat_card",
+      "title": "Disponibilidade de Hosts",
+      "x": 3,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "metric_type": "hosts_availability",
+        "icon": "server"
+      }
+    },
+    {
+      "id": "w_summary_problems",
+      "type": "stat_card",
+      "title": "Incidentes Ativos",
+      "x": 6,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "metric_type": "problems_count",
+        "icon": "alert-triangle"
+      }
+    },
+    {
+      "id": "w_summary_unack",
+      "type": "stat_card",
+      "title": "Não Reconhecidos",
+      "x": 9,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "metric_type": "problems_unack",
+        "icon": "shield-alert"
+      }
+    },
+    {
+      "id": "w_problems_table",
+      "type": "problems_table",
+      "title": "🚨 Central de Alarmes e Problemas Recentes",
+      "x": 0,
+      "y": 2,
+      "w": 8,
+      "h": 5,
+      "config": {
+        "limit": 15,
+        "show_host": true,
+        "show_severity": true,
+        "show_time": true,
+        "show_ack": true
+      }
+    },
+    {
+      "id": "w_host_status",
+      "type": "host_status_grid",
+      "title": "🟢 Status de Ativos / Hosts",
+      "x": 8,
+      "y": 2,
+      "w": 4,
+      "h": 5,
+      "config": {
+        "limit": 20
+      }
+    },
+    {
+      "id": "w_top_cpu",
+      "type": "top_n",
+      "title": "⚡ Top Utilização de CPU",
+      "x": 0,
+      "y": 7,
+      "w": 6,
+      "h": 4,
+      "config": {
+        "search_item": "CPU",
+        "unit": "%",
+        "limit": 5
+      }
+    },
+    {
+      "id": "w_top_mem",
+      "type": "top_n",
+      "title": "🧠 Top Utilização de Memória",
+      "x": 6,
+      "y": 7,
+      "w": 6,
+      "h": 4,
+      "config": {
+        "search_item": "Memory",
+        "unit": "%",
+        "limit": 5
+      }
+    }
+  ]
+}
