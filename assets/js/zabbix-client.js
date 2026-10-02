@@ -103,6 +103,19 @@ class ZabbixClient {
     }
   }
 
+  async getSwitchesAnalysis(groupids = null, search = null) {
+    try {
+      let url = `${this.baseUrl}?action=switches_analysis`;
+      if (groupids) url += `&groupids=${groupids}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      const res = await fetch(url);
+      return await res.json();
+    } catch (err) {
+      console.error('Erro ao buscar análise de switches:', err);
+      return { success: false, switches: [], summary: { total: 0, up: 0, down: 0 } };
+    }
+  }
+
   async customRpc(method, params = {}) {
     try {
       const res = await fetch(`${this.baseUrl}?action=rpc`, {

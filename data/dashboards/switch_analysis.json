@@ -1,0 +1,80 @@
+{
+  "id": "switch_analysis",
+  "title": "Dashboard Análise de Switches (TV) - BEE",
+  "description": "Monitoramento em tempo real de switches e equipamentos de rede (Ping, Latência, Perdas, CPU, Memória, Temperatura e Uptime)",
+  "refresh_interval": 15,
+  "columns": 12,
+  "widgets": [
+    {
+      "id": "w_brand_bee",
+      "type": "brand_banner",
+      "title": "BEE SOLUTIONS",
+      "x": 0,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "brand_name": "BEE SOLUTIONS",
+        "subtitle": "Análise de Switches (TV)"
+      }
+    },
+    {
+      "id": "w_stat_total",
+      "type": "stat_card",
+      "title": "Total Switches",
+      "x": 3,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "metric_type": "switches_total",
+        "card_style": "solid_blue",
+        "show_header": false
+      }
+    },
+    {
+      "id": "w_stat_up",
+      "type": "stat_card",
+      "title": "Switches UP",
+      "x": 6,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "metric_type": "switches_up",
+        "card_style": "solid_green",
+        "custom_icon": "check",
+        "show_header": false
+      }
+    },
+    {
+      "id": "w_stat_down",
+      "type": "stat_card",
+      "title": "Switches DOWN",
+      "x": 9,
+      "y": 0,
+      "w": 3,
+      "h": 2,
+      "config": {
+        "metric_type": "switches_down",
+        "card_style": "solid_red",
+        "custom_icon": "alert",
+        "show_header": false
+      }
+    },
+    {
+      "id": "w_switches_main_table",
+      "type": "switches_table",
+      "title": "Tabela Análise de Servidores (Geral) / Switches",
+      "x": 0,
+      "y": 2,
+      "w": 12,
+      "h": 9,
+      "config": {
+        "show_status": true
+      }
+    }
+  ],
+  "created_at": 1727870400,
+  "updated_at": 1790953200
+}

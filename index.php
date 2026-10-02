@@ -155,6 +155,8 @@
           <label class="block text-xs font-semibold text-slate-300 mb-1">Tipo de Widget</label>
           <select id="widget-type-select" onchange="editor.updateWidgetFormFields()"
                   class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+            <option value="switches_table">🔀 Tabela Análise de Switches / Servidores (Grafana Style)</option>
+            <option value="brand_banner">🏷️ Banner de Marca / Logo (Ex: BEE SOLUTIONS)</option>
             <option value="problems_table">🚨 Tabela de Alarmes / Incidentes (Zabbix 7.0)</option>
             <option value="graph">📈 Gráfico Temporal de Métrica (ApexCharts)</option>
             <option value="gauge">🎯 Medidor Gauge (CPU, RAM, Disco %)</option>

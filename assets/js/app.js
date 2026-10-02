@@ -18,9 +18,15 @@ class App {
     this.initGridstack();
     await this.loadDashboardsList();
     
-    // Carrega o primeiro dashboard por padrão
+    // Verifica parâmetro de URL ou localStorage ou prioriza switch_analysis
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlDashId = urlParams.get('dashboard') || localStorage.getItem('last_active_dashboard');
+
     if (this.dashboardsList.length > 0) {
-      await this.loadDashboard(this.dashboardsList[0].id);
+      const match = this.dashboardsList.find(d => d.id === urlDashId) 
+                 || this.dashboardsList.find(d => d.id === 'switch_analysis') 
+                 || this.dashboardsList[0];
+      await this.loadDashboard(match.id);
     } else {
       await this.createNewDashboard('Dashboard Principal');
     }
@@ -75,6 +81,7 @@ class App {
       const data = await res.json();
       if (data.success && data.dashboard) {
         this.currentDashboard = data.dashboard;
+        localStorage.setItem('last_active_dashboard', id);
         this.renderActiveDashboard();
         this.renderDashboardDropdown();
         this.countdown = this.currentDashboard.refresh_interval || 30;

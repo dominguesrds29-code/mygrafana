@@ -37,12 +37,50 @@ class DashboardEditor {
 
     if (type === 'stat_card') {
       dynamicFields.innerHTML = `
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Métrica</label>
-        <select id="wcfg-metric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
-          <option value="problems_count">Contador de Incidentes Ativos</option>
-          <option value="problems_unack">Incidentes Não Reconhecidos</option>
-          <option value="hosts_availability">Porcentagem de Hosts Disponíveis</option>
-        </select>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Métrica</label>
+            <select id="wcfg-metric" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+              <option value="switches_total">Total de Switches Monitorados</option>
+              <option value="switches_up">Switches Online (UP)</option>
+              <option value="switches_down">Switches Offline / Alerta (DOWN)</option>
+              <option value="problems_count">Contador de Incidentes Ativos</option>
+              <option value="problems_unack">Incidentes Não Reconhecidos</option>
+              <option value="hosts_availability">Porcentagem de Hosts Disponíveis</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Estilo do Cartão</label>
+            <select id="wcfg-cardstyle" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+              <option value="glass">Padrão Glassmorphism (Translúcido)</option>
+              <option value="solid_blue">Azul Sólido (Total Switches)</option>
+              <option value="solid_green">Verde Sólido (Switches UP / OK)</option>
+              <option value="solid_red">Vermelho Sólido (Switches DOWN / Crítico)</option>
+              <option value="solid_amber">Laranja Sólido (Atenção)</option>
+            </select>
+          </div>
+        </div>
+      `;
+    } else if (type === 'brand_banner') {
+      dynamicFields.innerHTML = `
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Nome da Empresa / Marca</label>
+            <input type="text" id="wcfg-brand-name" value="BEE SOLUTIONS" 
+                   class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Subtítulo / Descrição</label>
+            <input type="text" id="wcfg-subtitle" value="Análise de Switches (TV)" 
+                   class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+          </div>
+        </div>
+      `;
+    } else if (type === 'switches_table') {
+      dynamicFields.innerHTML = `
+        <div class="text-xs text-slate-400">
+          Exibe a tabela completa de switches estilo Grafana TV com status de Ping, Perdas %, Latência (ms), CPU, Memória, Temperatura e Uptime.
+        </div>
       `;
     } else if (type === 'graph' || type === 'gauge' || type === 'top_n') {
       dynamicFields.innerHTML = `
@@ -98,7 +136,16 @@ class DashboardEditor {
 
     const config = {};
     if (type === 'stat_card') {
-      config.metric_type = document.getElementById('wcfg-metric')?.value || 'problems_count';
+      config.metric_type = document.getElementById('wcfg-metric')?.value || 'switches_total';
+      config.card_style = document.getElementById('wcfg-cardstyle')?.value || 'glass';
+      if (config.card_style !== 'glass') {
+        config.show_header = false;
+      }
+    } else if (type === 'brand_banner') {
+      config.brand_name = document.getElementById('wcfg-brand-name')?.value || 'BEE SOLUTIONS';
+      config.subtitle = document.getElementById('wcfg-subtitle')?.value || 'Análise de Switches (TV)';
+    } else if (type === 'switches_table') {
+      config.show_status = true;
     } else if (type === 'graph') {
       config.search_item = document.getElementById('wcfg-search')?.value || 'CPU';
       config.chart_type = document.getElementById('wcfg-charttype')?.value || 'area';
@@ -119,6 +166,8 @@ class DashboardEditor {
       id: 'w_' + Date.now(),
       type: type,
       title: title,
+      x: 0,
+      y: 0,
       w: width,
       h: height,
       config: config
