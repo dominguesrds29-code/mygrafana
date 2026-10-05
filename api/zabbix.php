@@ -31,6 +31,7 @@ function zabbix_rpc_request($method, $params = [], $auth = null) {
     }
 
     $token = !empty($auth) ? $auth : ($settings['api_token'] ?? '');
+    $isPublicMethod = in_array($method, ['apiinfo.version', 'user.login', 'user.checkAuthentication']);
 
     $payload = [
         'jsonrpc' => '2.0',
@@ -40,7 +41,8 @@ function zabbix_rpc_request($method, $params = [], $auth = null) {
     ];
 
     // No Zabbix 7.0, o token pode ser enviado no cabeçalho Authorization Bearer ou no campo auth
-    if (!empty($token)) {
+    // Métodos públicos como apiinfo.version rejeitam o parâmetro 'auth' com "Invalid params."
+    if (!empty($token) && !$isPublicMethod) {
         $payload['auth'] = $token;
     }
 
@@ -49,7 +51,7 @@ function zabbix_rpc_request($method, $params = [], $auth = null) {
         'Content-Type: application/json-rpc',
         'Accept: application/json'
     ];
-    if (!empty($token)) {
+    if (!empty($token) && !$isPublicMethod) {
         $headers[] = 'Authorization: Bearer ' . $token;
     }
 
@@ -59,6 +61,10 @@ function zabbix_rpc_request($method, $params = [], $auth = null) {
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_TIMEOUT, 20);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+    // Ignora proxy de ambiente (Squid) para chamadas na rede local/interna
+    curl_setopt($ch, CURLOPT_PROXY, '');
+    curl_setopt($ch, CURLOPT_NOPROXY, '*');
 
     if (empty($settings['verify_ssl'])) {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -89,7 +95,7 @@ $input = json_decode($rawInput, true) ?? [];
 
 switch ($action) {
     case 'test_connection':
-        // Testa a conexão usando apiinfo.version ou host.get com limit 1
+        // Testa a conexão usando apiinfo.version e host.get
         $testUrl = $input['zabbix_url'] ?? $settings['zabbix_url'];
         $testToken = $input['api_token'] ?? $settings['api_token'];
         
@@ -98,14 +104,19 @@ switch ($action) {
         $tempSettings['api_token'] = $testToken;
         $tempSettings['verify_ssl'] = $input['verify_ssl'] ?? false;
         
-        // Chamada apiinfo.version (não requer autenticação)
         $oldSettings = $settings;
         $settings = $tempSettings;
+        
+        // Chamada apiinfo.version (pública, não requer autenticação)
         $versionRes = zabbix_rpc_request('apiinfo.version', []);
         
         if (isset($versionRes['error'])) {
             $settings = $oldSettings;
-            echo json_encode(['success' => false, 'error' => $versionRes['error']['message'] ?? 'Erro desconhecido']);
+            $errMsg = $versionRes['error']['message'] ?? 'Erro desconhecido';
+            if (!empty($versionRes['error']['data'])) {
+                $errMsg .= ' (' . $versionRes['error']['data'] . ')';
+            }
+            echo json_encode(['success' => false, 'error' => $errMsg]);
             exit;
         }
 
@@ -114,11 +125,17 @@ switch ($action) {
         // Se forneceu token, testa autenticação buscando contagem de hosts
         $authValid = false;
         $hostCount = 0;
+        $authError = null;
         if (!empty($testToken)) {
             $authRes = zabbix_rpc_request('host.get', ['countOutput' => true], $testToken);
             if (!isset($authRes['error'])) {
                 $authValid = true;
                 $hostCount = intval($authRes['result'] ?? 0);
+            } else {
+                $authError = $authRes['error']['message'] ?? 'Token inválido';
+                if (!empty($authRes['error']['data'])) {
+                    $authError .= ' (' . $authRes['error']['data'] . ')';
+                }
             }
         }
 
@@ -127,6 +144,7 @@ switch ($action) {
             'success' => true,
             'version' => $version,
             'authenticated' => $authValid,
+            'auth_error' => $authError,
             'host_count' => $hostCount
         ]);
         break;

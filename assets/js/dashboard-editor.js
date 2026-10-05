@@ -282,7 +282,7 @@ class DashboardEditor {
         resultEl.innerHTML = `
           <strong> Conexão bem sucedida!</strong><br>
           Versão do Zabbix detectada: <span class="font-mono font-bold">${res.version}</span><br>
-          Autenticação: ${res.authenticated ? `<span class="text-emerald-300 font-semibold">Válida (${res.host_count} hosts encontrados)</span>` : '<span class="text-amber-400">Token não fornecido ou inválido</span>'}
+          Autenticação: ${res.authenticated ? `<span class="text-emerald-300 font-semibold">Válida (${res.host_count} hosts encontrados)</span>` : `<span class="text-amber-400">Token não fornecido ou inválido${res.auth_error ? ` (${res.auth_error})` : ''}</span>`}
         `;
       } else {
         resultEl.className = 'p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs';
