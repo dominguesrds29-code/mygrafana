@@ -168,7 +168,6 @@ class DashboardEditor {
     } else if (type === 'switches_table') {
       config.show_status = true;
       config.group_id = document.getElementById('wcfg-switch-group')?.value || '';
-    }
     } else if (type === 'graph') {
       config.search_item = document.getElementById('wcfg-search')?.value || 'CPU';
       config.chart_type = document.getElementById('wcfg-charttype')?.value || 'area';
