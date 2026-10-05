@@ -334,14 +334,72 @@ class DashboardEditor {
       const data = await res.json();
       if (data.success) {
         this.closeAllModals();
-        // Recarrega dashboard
-        window.app.refreshDashboardData();
+        // Atualiza intervalo no dashboard ativo e reinicia timer de auto refresh
+        if (window.app) {
+          if (window.app.currentDashboard) {
+            window.app.currentDashboard.refresh_interval = interval;
+            window.app.saveCurrentDashboard();
+          }
+          window.app.countdown = interval;
+          window.app.startAutoRefresh();
+          window.app.refreshDashboardData();
+          window.app.showToast(`✅ Configurações salvas! Polling ajustado para ${interval}s.`);
+        }
       } else {
         alert(data.error || 'Erro ao salvar.');
       }
     } catch (e) {
       alert('Erro de conexão com o servidor.');
     }
+  }
+
+  // Abre modal de edição para um widget específico
+  async openEditWidgetModal(widgetId) {
+    if (!window.app?.currentDashboard) return;
+    const widget = window.app.currentDashboard.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+
+    const modal = document.getElementById('modal-edit-widget');
+    if (!modal) return;
+
+    document.getElementById('edit-widget-id').value = widget.id;
+    document.getElementById('edit-widget-title').value = widget.title || '';
+
+    const groupSelect = document.getElementById('edit-widget-group');
+    if (groupSelect) {
+      groupSelect.innerHTML = '<option value="">📁 Todos os Grupos (Zabbix)</option>';
+      const groups = await window.zabbix.getHostGroups();
+      if (groups && groups.length > 0) {
+        groups.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.groupid;
+          opt.textContent = `📁 ${g.name}`;
+          if (String(g.groupid) === String(widget.config?.group_id || '')) {
+            opt.selected = true;
+          }
+          groupSelect.appendChild(opt);
+        });
+      }
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  // Salva alterações do widget editado
+  submitEditWidget() {
+    if (!window.app?.currentDashboard) return;
+    const widgetId = document.getElementById('edit-widget-id').value;
+    const widget = window.app.currentDashboard.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+
+    widget.title = document.getElementById('edit-widget-title').value || widget.title;
+    widget.config = widget.config || {};
+    widget.config.group_id = document.getElementById('edit-widget-group').value || '';
+
+    window.app.renderActiveDashboard();
+    window.app.saveCurrentDashboard();
+    this.closeAllModals();
+    window.app.showToast('✅ Painel atualizado!');
   }
 }
 

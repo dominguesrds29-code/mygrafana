@@ -37,6 +37,9 @@ class WidgetRegistry {
           </h3>
         </div>
         <div class="flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
+          <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-cyan-400 text-slate-400 text-xs rounded" title="Configurar Painel / Filtro de Grupo">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          </button>
           <button onclick="app.removeWidget('${widget.id}')" class="widget-delete-btn p-1 hover:text-rose-400 text-slate-400 text-xs rounded" title="Remover Widget">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
@@ -109,7 +112,10 @@ class WidgetRegistry {
 
     container.innerHTML = `
       ${showHeader ? this.renderHeader(widget) : `
-        <div class="absolute top-2 right-2 z-10 opacity-40 hover:opacity-100 transition-opacity">
+        <div class="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
+          <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-white text-slate-300 text-xs rounded" title="Configurar Card / Grupo de Hosts">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          </button>
           <button onclick="app.removeWidget('${widget.id}')" class="p-1 hover:text-rose-400 text-slate-300 text-xs rounded" title="Remover">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
@@ -143,7 +149,8 @@ class WidgetRegistry {
     if (!valEl) return;
 
     if (metric === 'switches_total' || metric === 'switches_up' || metric === 'switches_down') {
-      const swData = await window.zabbix.getSwitchesAnalysis();
+      const gid = widget.config?.group_id || null;
+      const swData = await window.zabbix.getSwitchesAnalysis(gid);
       const sum = swData.summary || { total: 0, up: 0, down: 0 };
       if (metric === 'switches_total') {
         valEl.textContent = sum.total;
@@ -669,9 +676,17 @@ class WidgetRegistry {
           tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-500"><div class="flex flex-col items-center justify-center gap-2"><span class="animate-spin text-cyan-400 text-xl">⏳</span><span>Carregando switches do grupo...</span></div></td></tr>`;
         }
         const selGid = groupSelect.value || null;
+        widget.config = widget.config || {};
+        widget.config.group_id = selGid;
+
         const newData = await window.zabbix.getSwitchesAnalysis(selGid);
         switches = newData.switches || [];
         sortAndFilter();
+
+        // Atualiza em tempo real os cards de totais com a contagem deste grupo
+        if (window.app && newData.summary) {
+          window.app.updateStatCardsWithSummary(newData.summary, selGid);
+        }
       };
     }
 

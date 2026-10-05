@@ -298,6 +298,31 @@ class App {
     });
   }
 
+  // Atualiza em tempo real os cartões de estatística quando um grupo de switches é filtrado
+  updateStatCardsWithSummary(summary, groupId = null) {
+    if (!summary || !this.currentDashboard) return;
+    this.currentDashboard.widgets.forEach(w => {
+      if (w.type === 'stat_card') {
+        const metric = w.config?.metric_type;
+        const valEl = document.getElementById(`stat_val_${w.id}`);
+        const subEl = document.getElementById(`stat_sub_${w.id}`);
+        if (!valEl) return;
+
+        // Se o card não tem grupo próprio fixado ou usa o mesmo grupo selecionado
+        if (!w.config?.group_id || w.config.group_id === groupId) {
+          if (metric === 'switches_total') {
+            valEl.textContent = summary.total;
+          } else if (metric === 'switches_up') {
+            valEl.textContent = summary.up;
+          } else if (metric === 'switches_down') {
+            valEl.textContent = summary.down;
+            if (subEl) subEl.textContent = summary.down === 0 ? 'Nenhum switch fora' : `${summary.down} Offline / Atenção`;
+          }
+        }
+      }
+    });
+  }
+
   toggleKioskMode() {
     this.isKioskMode = !this.isKioskMode;
     if (this.isKioskMode) {

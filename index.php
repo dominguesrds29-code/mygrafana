@@ -276,6 +276,37 @@
     </div>
   </div>
 
+  <!-- MODAL 4: Editar Widget / Configurar Painel -->
+  <div id="modal-edit-widget" class="modal-backdrop hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/60">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="text-cyan-400">⚙️</span> Configurar Card / Painel
+        </h3>
+        <button onclick="editor.closeAllModals()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <input type="hidden" id="edit-widget-id">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Título do Painel</label>
+          <input type="text" id="edit-widget-title" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Filtrar por Grupo de Hosts do Zabbix</label>
+          <select id="edit-widget-group" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+            <option value="">📁 Todos os Grupos (Zabbix)</option>
+          </select>
+          <span class="text-[10px] text-slate-500">Selecione o grupo (ex: Switches) para contabilizar apenas os equipamentos desse grupo</span>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-950 border-t border-slate-800 flex justify-end gap-2">
+        <button onclick="editor.closeAllModals()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium">Cancelar</button>
+        <button onclick="editor.submitEditWidget()" class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
   <!-- App Scripts -->
   <script src="assets/js/zabbix-client.js"></script>
   <script src="assets/js/widgets/widget-registry.js"></script>
