@@ -7,20 +7,30 @@ require_once __DIR__ . '/../config.php';
 
 $settings = get_app_settings();
 
+function normalize_zabbix_url($rawUrl) {
+    $url = trim($rawUrl ?? '');
+    if (empty($url)) return '';
+    
+    // Remove query string e fragmentos
+    $url = strtok($url, '?#');
+    $url = rtrim($url, '/');
+    
+    // Se o usuário colocou index.php, zabbix.php, api_jsonrpc.php etc no final, limpa o arquivo php
+    $url = preg_replace('/\/[a-zA-Z0-9_\-]+\.php$/i', '', $url);
+    $url = rtrim($url, '/');
+    
+    return $url . '/api_jsonrpc.php';
+}
+
 function zabbix_rpc_request($method, $params = [], $auth = null) {
     global $settings;
 
-    $url = rtrim($settings['zabbix_url'], '/');
+    $url = normalize_zabbix_url($settings['zabbix_url'] ?? '');
     if (empty($url)) {
         return ['error' => ['message' => 'URL do Zabbix não configurada no painel de configurações.']];
     }
 
-    // Se o endpoint não terminar com api_jsonrpc.php, adiciona automaticamente
-    if (!str_ends_with($url, 'api_jsonrpc.php')) {
-        $url .= '/api_jsonrpc.php';
-    }
-
-    $token = !empty($auth) ? $auth : $settings['api_token'];
+    $token = !empty($auth) ? $auth : ($settings['api_token'] ?? '');
 
     $payload = [
         'jsonrpc' => '2.0',
@@ -48,6 +58,7 @@ function zabbix_rpc_request($method, $params = [], $auth = null) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
     if (empty($settings['verify_ssl'])) {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -65,7 +76,8 @@ function zabbix_rpc_request($method, $params = [], $auth = null) {
 
     $json = json_decode($response, true);
     if ($json === null) {
-        return ['error' => ['message' => 'Resposta inválida do Zabbix (HTTP ' . $httpCode . '): ' . substr($response, 0, 300)]];
+        $cleanResp = trim(strip_tags(substr($response, 0, 150)));
+        return ['error' => ['message' => 'Resposta inválida do Zabbix (HTTP ' . $httpCode . '): ' . ($cleanResp ?: 'Corpo não é um JSON válido')]];
     }
 
     return $json;
