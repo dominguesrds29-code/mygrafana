@@ -571,16 +571,21 @@ class WidgetRegistry {
     const tableId = `sw_tbl_${widget.id}`;
     const searchId = `sw_srch_${widget.id}`;
     const countId = `sw_cnt_${widget.id}`;
+    const groupId = `sw_grp_${widget.id}`;
+    const currentGroupId = widget.config?.group_id || '';
 
     container.innerHTML = `
       ${this.renderHeader(widget)}
       <div class="p-2.5 border-b border-white/5 bg-slate-900/30 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <div class="relative w-64">
+        <div class="flex items-center flex-wrap gap-2">
+          <div class="relative w-56">
             <input type="text" id="${searchId}" placeholder="Filtrar switch por nome ou IP..." 
                    class="w-full bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg pl-7 pr-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none transition">
             <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           </div>
+          <select id="${groupId}" class="bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none max-w-[200px] truncate cursor-pointer">
+            <option value="">📁 Todos os Grupos (Zabbix)</option>
+          </select>
           <span id="${countId}" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono font-semibold border border-slate-700">
             Carregando...
           </span>
@@ -635,11 +640,40 @@ class WidgetRegistry {
       </div>
     `;
 
-    const data = await window.zabbix.getSwitchesAnalysis();
+    const initialGid = currentGroupId || null;
+    const data = await window.zabbix.getSwitchesAnalysis(initialGid);
     let switches = data.switches || [];
     const tbody = document.getElementById(`tbody_${widget.id}`);
     const countBadge = document.getElementById(countId);
     const searchInput = document.getElementById(searchId);
+    const groupSelect = document.getElementById(groupId);
+
+    // Carrega os grupos de hosts reais do Zabbix no dropdown
+    if (groupSelect) {
+      window.zabbix.getHostGroups().then(groups => {
+        if (groups && groups.length > 0) {
+          groups.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.groupid;
+            opt.textContent = `📁 ${g.name}`;
+            if (String(g.groupid) === String(currentGroupId)) {
+              opt.selected = true;
+            }
+            groupSelect.appendChild(opt);
+          });
+        }
+      });
+
+      groupSelect.onchange = async () => {
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-500"><div class="flex flex-col items-center justify-center gap-2"><span class="animate-spin text-cyan-400 text-xl">⏳</span><span>Carregando switches do grupo...</span></div></td></tr>`;
+        }
+        const selGid = groupSelect.value || null;
+        const newData = await window.zabbix.getSwitchesAnalysis(selGid);
+        switches = newData.switches || [];
+        sortAndFilter();
+      };
+    }
 
     let currentSort = { col: 'name', dir: 'asc' };
 

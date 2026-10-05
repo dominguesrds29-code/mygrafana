@@ -78,10 +78,31 @@ class DashboardEditor {
       `;
     } else if (type === 'switches_table') {
       dynamicFields.innerHTML = `
-        <div class="text-xs text-slate-400">
-          Exibe a tabela completa de switches estilo Grafana TV com status de Ping, Perdas %, Latência (ms), CPU, Memória, Temperatura e Uptime.
+        <div class="space-y-3">
+          <div class="text-xs text-slate-400">
+            Exibe a tabela completa de switches estilo Grafana TV com status de Ping, Perdas %, Latência (ms), CPU, Memória, Temperatura e Uptime.
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Filtrar por Grupo de Hosts do Zabbix</label>
+            <select id="wcfg-switch-group" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+              <option value="">📁 Todos os Grupos</option>
+            </select>
+          </div>
         </div>
       `;
+      if (window.zabbix) {
+        window.zabbix.getHostGroups().then(groups => {
+          const sel = document.getElementById('wcfg-switch-group');
+          if (sel && groups) {
+            groups.forEach(g => {
+              const opt = document.createElement('option');
+              opt.value = g.groupid;
+              opt.textContent = `📁 ${g.name}`;
+              sel.appendChild(opt);
+            });
+          }
+        });
+      }
     } else if (type === 'graph' || type === 'gauge' || type === 'top_n') {
       dynamicFields.innerHTML = `
         <div class="space-y-3">
@@ -146,6 +167,8 @@ class DashboardEditor {
       config.subtitle = document.getElementById('wcfg-subtitle')?.value || 'Análise de Switches (TV)';
     } else if (type === 'switches_table') {
       config.show_status = true;
+      config.group_id = document.getElementById('wcfg-switch-group')?.value || '';
+    }
     } else if (type === 'graph') {
       config.search_item = document.getElementById('wcfg-search')?.value || 'CPU';
       config.chart_type = document.getElementById('wcfg-charttype')?.value || 'area';
