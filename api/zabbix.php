@@ -313,6 +313,7 @@ switch ($action) {
         $hostsParams = [
             'output' => ['hostid', 'host', 'name', 'status', 'available', 'error', 'description'],
             'selectInterfaces' => ['ip', 'dns', 'port', 'type', 'main', 'available'],
+            'selectInventory' => ['serialno_a', 'serialno_b', 'software', 'software_app_a', 'software_app_b', 'os', 'os_full', 'hardware', 'model', 'vendor'],
             'sortfield' => 'name'
         ];
         if ($groupids) {
@@ -327,33 +328,20 @@ switch ($action) {
         // Se a API Zabbix retornar erro ou nenhum host configurado, fornecemos dados de demonstração idênticos ao dashboard de referência
         if (isset($hostsRes['error']) || empty($hostsRes['result'])) {
             $demoSwitches = [
-                ['name' => 'SW-DM4380-MPLS-01', 'ip' => '10.200.1.1', 'ping' => 1, 'loss' => 0, 'latency' => 12.0, 'cpu' => 36, 'memory' => 42.8, 'temp' => 55.0, 'uptime' => '17 d 01:14:49', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-02', 'ip' => '10.200.1.2', 'ping' => 1, 'loss' => 0, 'latency' => 16.7, 'cpu' => 30, 'memory' => 43.6, 'temp' => 43.8, 'uptime' => '110 d 08:48:04', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-03', 'ip' => '10.200.1.3', 'ping' => 1, 'loss' => 0, 'latency' => 12.4, 'cpu' => 31, 'memory' => 43.8, 'temp' => 54.0, 'uptime' => '129 d 16:16:27', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-04', 'ip' => '10.200.1.4', 'ping' => 1, 'loss' => 0, 'latency' => 11.6, 'cpu' => 28, 'memory' => 42.2, 'temp' => 40.0, 'uptime' => '22:53:23', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-05', 'ip' => '10.200.1.5', 'ping' => 1, 'loss' => 0, 'latency' => 16.9, 'cpu' => 31, 'memory' => 41.4, 'temp' => 58.1, 'uptime' => '122 d 17:36:26', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-06', 'ip' => '10.200.1.6', 'ping' => 1, 'loss' => 0, 'latency' => 12.2, 'cpu' => 27, 'memory' => 60.7, 'temp' => 66.0, 'uptime' => '262 d 01:54:38', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-07', 'ip' => '10.200.1.7', 'ping' => 1, 'loss' => 0, 'latency' => 14.9, 'cpu' => 34, 'memory' => 44.1, 'temp' => 62.0, 'uptime' => '175 d 16:34:34', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-08', 'ip' => '10.200.1.8', 'ping' => 1, 'loss' => 0, 'latency' => 13.9, 'cpu' => 35, 'memory' => 44.7, 'temp' => 61.9, 'uptime' => '141 d 15:36:08', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-09', 'ip' => '10.200.1.9', 'ping' => 1, 'loss' => 0, 'latency' => 12.4, 'cpu' => 34, 'memory' => 50.2, 'temp' => 53.0, 'uptime' => '348 d 21:04:18', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-10', 'ip' => '10.200.1.10', 'ping' => 1, 'loss' => 0, 'latency' => 16.3, 'cpu' => 31, 'memory' => 48.9, 'temp' => 50.6, 'uptime' => '231 d 00:20:23', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-11', 'ip' => '10.200.1.11', 'ping' => 1, 'loss' => 0, 'latency' => 12.6, 'cpu' => 29, 'memory' => 43.2, 'temp' => 56.0, 'uptime' => '85 d 04:53:08', 'status' => 'up'],
-                ['name' => 'SW-DM4380-MPLS-12', 'ip' => '10.200.1.12', 'ping' => 1, 'loss' => 0, 'latency' => 16.3, 'cpu' => 35, 'memory' => 45.1, 'temp' => 51.3, 'uptime' => '43 d 04:33:31', 'status' => 'up'],
-                ['name' => 'SW-S6730-MPLS-B01', 'ip' => '10.200.2.1', 'ping' => 1, 'loss' => 0, 'latency' => 11.7, 'cpu' => 5, 'memory' => 15.0, 'temp' => 28.0, 'uptime' => '107 d 20:12:34', 'status' => 'up'],
-                ['name' => 'SW-S6730-MPLS-C02', 'ip' => '10.200.2.2', 'ping' => 1, 'loss' => 0, 'latency' => 10.3, 'cpu' => 8, 'memory' => 16.0, 'temp' => 37.0, 'uptime' => '223 d 23:29:56', 'status' => 'up'],
-                ['name' => 'SW-S6730-MPLS-F03', 'ip' => '10.200.2.3', 'ping' => 1, 'loss' => 0, 'latency' => 12.1, 'cpu' => 7, 'memory' => 15.0, 'temp' => 34.0, 'uptime' => '65 d 19:49:41', 'status' => 'up'],
-                ['name' => 'SW-S6730-MPLS-N04', 'ip' => '10.200.2.4', 'ping' => 1, 'loss' => 0, 'latency' => 12.9, 'cpu' => 4, 'memory' => 14.0, 'temp' => 27.0, 'uptime' => '26 d 21:36:36', 'status' => 'up'],
-                ['name' => 'SW-S6730-MPLS-R05', 'ip' => '10.200.2.5', 'ping' => 1, 'loss' => 0, 'latency' => 11.1, 'cpu' => 5, 'memory' => 17.0, 'temp' => 35.0, 'uptime' => '85 d 16:21:39', 'status' => 'up'],
-                ['name' => 'SW-S6730-MPLS-S06', 'ip' => '10.200.2.6', 'ping' => 1, 'loss' => 0, 'latency' => 12.0, 'cpu' => 4, 'memory' => 17.0, 'temp' => 35.0, 'uptime' => '157 d 03:59:12', 'status' => 'up'],
-                ['name' => 'SW-S6730-MPLS-S07', 'ip' => '10.200.2.7', 'ping' => 1, 'loss' => 0, 'latency' => 11.9, 'cpu' => 4, 'memory' => 16.0, 'temp' => 36.0, 'uptime' => '24 d 23:28:37', 'status' => 'up'],
-                ['name' => 'SW-CORE-DIST-01', 'ip' => '10.200.0.1', 'ping' => 1, 'loss' => 0, 'latency' => 4.2, 'cpu' => 19, 'memory' => 38.4, 'temp' => 39.5, 'uptime' => '412 d 06:12:10', 'status' => 'up'],
-                ['name' => 'SW-CORE-DIST-02', 'ip' => '10.200.0.2', 'ping' => 1, 'loss' => 0, 'latency' => 4.5, 'cpu' => 22, 'memory' => 39.1, 'temp' => 41.0, 'uptime' => '412 d 06:10:05', 'status' => 'up'],
-                ['name' => 'SW-ACCESS-BLOCO-A', 'ip' => '10.200.3.1', 'ping' => 1, 'loss' => 0, 'latency' => 15.2, 'cpu' => 12, 'memory' => 28.0, 'temp' => 33.0, 'uptime' => '94 d 11:22:01', 'status' => 'up'],
-                ['name' => 'SW-ACCESS-BLOCO-B', 'ip' => '10.200.3.2', 'ping' => 0, 'loss' => 100, 'latency' => 0, 'cpu' => 0, 'memory' => 0, 'temp' => 0, 'uptime' => '00:00:00', 'status' => 'down']
+                ['name' => 'SW-DM4380-MPLS-01', 'ip' => '10.200.1.1', 'ping' => 1, 'serial' => 'FOC2145X01A', 'latency' => 12.0, 'cpu' => 36, 'memory' => 42.8, 'temp' => 55.0, 'os_version' => '15.2(2)E9', 'uptime' => '17 d 01:14:49', 'status' => 'up'],
+                ['name' => 'SW-DM4380-MPLS-02', 'ip' => '10.200.1.2', 'ping' => 1, 'serial' => 'FOC2145X02B', 'latency' => 16.7, 'cpu' => 30, 'memory' => 43.6, 'temp' => 43.8, 'os_version' => '15.2(2)E9', 'uptime' => '110 d 08:48:04', 'status' => 'up'],
+                ['name' => 'SW-DM4380-MPLS-03', 'ip' => '10.200.1.3', 'ping' => 1, 'serial' => 'FOC2145X03C', 'latency' => 12.4, 'cpu' => 31, 'memory' => 43.8, 'temp' => 54.0, 'os_version' => '15.2(4)E7', 'uptime' => '129 d 16:16:27', 'status' => 'up'],
+                ['name' => 'SW-DM4380-MPLS-04', 'ip' => '10.200.1.4', 'ping' => 1, 'serial' => 'FOC2145X04D', 'latency' => 11.6, 'cpu' => 28, 'memory' => 42.2, 'temp' => 40.0, 'os_version' => '15.2(2)E9', 'uptime' => '22:53:23', 'status' => 'up'],
+                ['name' => 'SW-DM4380-MPLS-05', 'ip' => '10.200.1.5', 'ping' => 1, 'serial' => 'FOC2145X05E', 'latency' => 16.9, 'cpu' => 31, 'memory' => 41.4, 'temp' => 58.1, 'os_version' => '15.2(2)E9', 'uptime' => '122 d 17:36:26', 'status' => 'up'],
+                ['name' => 'SW-DM4380-MPLS-06', 'ip' => '10.200.1.6', 'ping' => 1, 'serial' => 'FOC2145X06F', 'latency' => 12.2, 'cpu' => 27, 'memory' => 60.7, 'temp' => 66.0, 'os_version' => '15.2(4)E8', 'uptime' => '262 d 01:54:38', 'status' => 'up'],
+                ['name' => 'SW-CORE-DIST-01', 'ip' => '10.200.0.1', 'ping' => 1, 'serial' => 'FCW2210G08A', 'latency' => 4.2, 'cpu' => 19, 'memory' => 38.4, 'temp' => 39.5, 'os_version' => '15.2(7)E1', 'uptime' => '412 d 06:12:10', 'status' => 'up'],
+                ['name' => 'SW-CORE-DIST-02', 'ip' => '10.200.0.2', 'ping' => 1, 'serial' => 'FCW2210G09B', 'latency' => 4.5, 'cpu' => 22, 'memory' => 39.1, 'temp' => 41.0, 'os_version' => '15.2(7)E1', 'uptime' => '412 d 06:10:05', 'status' => 'up'],
+                ['name' => 'SW-ACCESS-BLOCO-A', 'ip' => '10.200.3.1', 'ping' => 1, 'serial' => 'FCW2145A09J', 'latency' => 15.2, 'cpu' => 12, 'memory' => 28.0, 'temp' => 33.0, 'os_version' => '15.2(2)E9', 'uptime' => '94 d 11:22:01', 'status' => 'up'],
+                ['name' => 'SW-ACCESS-BLOCO-B', 'ip' => '10.200.3.2', 'ping' => 0, 'serial' => 'FCW2145A10K', 'latency' => 0, 'cpu' => 0, 'memory' => 0, 'temp' => 0, 'os_version' => '15.2(2)E9', 'uptime' => '00:00:00', 'status' => 'down']
             ];
 
-            // Preenche até 39 switches para bater exatamente com os totais do painel
-            for ($i = count($demoSwitches) + 1; $i <= 39; $i++) {
+            // Preenche até 17 switches
+            for ($i = count($demoSwitches) + 1; $i <= 17; $i++) {
                 $cpuVal = rand(4, 38);
                 $memVal = rand(15, 52);
                 $tempVal = rand(26, 60);
@@ -363,11 +351,12 @@ switch ($action) {
                     'name' => sprintf('SW-DISTRIB-SEC-%02d', $i),
                     'ip' => sprintf('10.200.4.%d', $i),
                     'ping' => 1,
-                    'loss' => 0,
+                    'serial' => sprintf('FCW%04dK%02d', rand(1000, 9999), $i),
                     'latency' => $latVal,
                     'cpu' => $cpuVal,
                     'memory' => $memVal,
                     'temp' => $tempVal,
+                    'os_version' => '15.2(2)E9',
                     'uptime' => sprintf('%d d %02d:%02d:%02d', $upDays, rand(0, 23), rand(0, 59), rand(0, 59)),
                     'status' => 'up'
                 ];
@@ -420,20 +409,24 @@ switch ($action) {
             $hid = $h['hostid'];
             $hItems = $itemsByHost[$hid] ?? [];
             $ip = $h['interfaces'][0]['ip'] ?? 'N/A';
+            $inventory = $h['inventory'] ?? [];
 
             $ping = 1;
-            $loss = 0;
             $latency = 0;
             $cpu = 0;
             $memory = 0;
             $temp = 0;
             $uptimeSeconds = 0;
             $uptimeStr = '-';
+            
+            $serial = !empty($inventory['serialno_a']) ? $inventory['serialno_a'] : (!empty($inventory['serialno_b']) ? $inventory['serialno_b'] : '-');
+            $osVersion = !empty($inventory['os']) ? $inventory['os'] : (!empty($inventory['software']) ? $inventory['software'] : (!empty($inventory['os_full']) ? $inventory['os_full'] : '-'));
 
             // Avalia itens do host
             foreach ($hItems as $it) {
                 $nameLower = strtolower($it['name']);
                 $keyLower = strtolower($it['key_']);
+                $valRaw = trim((string)($it['lastvalue'] ?? ''));
                 $val = floatval($it['lastvalue']);
 
                 // Ping ICMP
@@ -441,11 +434,6 @@ switch ($action) {
                     $ping = intval($val);
                 } elseif (str_contains($nameLower, 'ping') && !str_contains($nameLower, 'loss') && !str_contains($nameLower, 'response')) {
                     $ping = intval($val) > 0 ? 1 : 0;
-                }
-
-                // Packet loss
-                if (str_contains($keyLower, 'icmppingloss') || str_contains($nameLower, 'loss') || str_contains($nameLower, 'perda')) {
-                    $loss = round($val, 1);
                 }
 
                 // Latency (RTT)
@@ -473,6 +461,37 @@ switch ($action) {
                 if (str_contains($keyLower, 'system.uptime') || str_contains($nameLower, 'uptime')) {
                     $uptimeSeconds = intval($val);
                 }
+
+                // Serial Number a partir dos itens SNMP caso não esteja preenchido no inventário
+                if ($serial === '-' || empty($serial)) {
+                    if (str_contains($keyLower, 'serial') || str_contains($nameLower, 'serial number') || str_contains($nameLower, 'serial no') || str_contains($keyLower, 'entphysicalserialnum')) {
+                        if (!empty($valRaw) && strlen($valRaw) >= 3 && !is_numeric($valRaw)) {
+                            $serial = $valRaw;
+                        }
+                    }
+                }
+
+                // Versão do SO / Firmware a partir dos itens SNMP caso não esteja no inventário
+                if ($osVersion === '-' || empty($osVersion)) {
+                    if (str_contains($keyLower, 'system.sw.os') || str_contains($keyLower, 'system.hw.firmware') || str_contains($nameLower, 'software version') || str_contains($nameLower, 'firmware version') || str_contains($nameLower, 'operating system') || str_contains($keyLower, 'system.descr') || str_contains($nameLower, 'system description')) {
+                        if (!empty($valRaw) && strlen($valRaw) >= 2) {
+                            $osVersion = $valRaw;
+                        }
+                    }
+                }
+            }
+
+            // Normaliza a versão do SO (extrai versão limpa como 15.2(2)E9 se for texto longo do Cisco/Huawei)
+            if (!empty($osVersion) && $osVersion !== '-') {
+                if (preg_match('/Version\s+([0-9a-zA-Z\.\(\)\-_]+)/i', $osVersion, $m)) {
+                    $osVersion = $m[1];
+                } elseif (preg_match('/(?:VRP|Release|SW Version|IOS)\s*([0-9a-zA-Z\.\(\)\-_]+)/i', $osVersion, $m)) {
+                    $osVersion = $m[1];
+                } elseif (strlen($osVersion) > 22) {
+                    $osVersion = substr($osVersion, 0, 22);
+                }
+            } else {
+                $osVersion = '-';
             }
 
             // Formata Uptime
@@ -499,11 +518,12 @@ switch ($action) {
                 'name' => $h['name'],
                 'ip' => $ip,
                 'ping' => $isUp ? 1 : 0,
-                'loss' => $loss,
+                'serial' => $serial,
                 'latency' => $latency,
                 'cpu' => $cpu,
                 'memory' => $memory,
                 'temp' => $temp,
+                'os_version' => $osVersion,
                 'uptime' => $uptimeStr,
                 'status' => $isUp ? 'up' : 'down'
             ];

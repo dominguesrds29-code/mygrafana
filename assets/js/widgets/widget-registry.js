@@ -613,8 +613,8 @@ class WidgetRegistry {
               <th data-sort="ping" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
                 <div class="flex items-center justify-center gap-1">Ping <span class="text-[9px] opacity-60">▽</span></div>
               </th>
-              <th data-sort="loss" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center justify-center gap-1">Percas (%) <span class="text-[9px] opacity-60">▽</span></div>
+              <th data-sort="serial" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
+                <div class="flex items-center justify-center gap-1">Serial Number <span class="text-[9px] opacity-60">▽</span></div>
               </th>
               <th data-sort="latency" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
                 <div class="flex items-center justify-center gap-1">Latencia (ms) <span class="text-[9px] opacity-60">▽</span></div>
@@ -628,6 +628,9 @@ class WidgetRegistry {
               <th data-sort="temp" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
                 <div class="flex items-center justify-center gap-1">Temperatura (C°) <span class="text-[9px] opacity-60">▽</span></div>
               </th>
+              <th data-sort="os_version" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
+                <div class="flex items-center justify-center gap-1">Versão SO / Firmware <span class="text-[9px] opacity-60">▽</span></div>
+              </th>
               <th data-sort="uptime" class="py-2.5 px-3 text-right cursor-pointer hover:text-cyan-400 transition">
                 <div class="flex items-center justify-end gap-1">Uptime <span class="text-[9px] opacity-60">▽</span></div>
               </th>
@@ -635,7 +638,7 @@ class WidgetRegistry {
           </thead>
           <tbody id="tbody_${widget.id}" class="divide-y divide-white/[0.04]">
             <tr>
-              <td colspan="8" class="py-12 text-center text-slate-500">
+              <td colspan="9" class="py-12 text-center text-slate-500">
                 <div class="flex flex-col items-center justify-center gap-2">
                   <span class="animate-spin text-cyan-400 text-xl">⏳</span>
                   <span>Consultando dados de switches no Zabbix...</span>
@@ -673,7 +676,7 @@ class WidgetRegistry {
 
       groupSelect.onchange = async () => {
         if (tbody) {
-          tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-500"><div class="flex flex-col items-center justify-center gap-2"><span class="animate-spin text-cyan-400 text-xl">⏳</span><span>Carregando switches do grupo...</span></div></td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="9" class="py-12 text-center text-slate-500"><div class="flex flex-col items-center justify-center gap-2"><span class="animate-spin text-cyan-400 text-xl">⏳</span><span>Carregando switches do grupo...</span></div></td></tr>`;
         }
         const selGid = groupSelect.value || null;
         widget.config = widget.config || {};
@@ -697,7 +700,7 @@ class WidgetRegistry {
       if (countBadge) countBadge.textContent = `${list.length} Switches`;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500 font-medium">Nenhum switch correspondente encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-medium">Nenhum switch correspondente encontrado.</td></tr>`;
         return;
       }
 
@@ -753,10 +756,10 @@ class WidgetRegistry {
               </span>
             </td>
 
-            <!-- Percas (%) -->
+            <!-- Serial Number -->
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
-              <span class="inline-block w-16 py-1 rounded text-[11px] font-medium ${sw.loss > 0 ? 'bg-rose-950 text-rose-300 font-bold' : 'bg-slate-900/80 text-slate-300'}">
-                ${sw.loss}%
+              <span class="inline-block px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/60 font-mono text-[11px] text-cyan-300 font-semibold tracking-wider">
+                ${sw.serial || '-'}
               </span>
             </td>
 
@@ -794,6 +797,13 @@ class WidgetRegistry {
               </span>
             </td>
 
+            <!-- Versão SO / Firmware -->
+            <td class="py-1.5 px-2 text-center whitespace-nowrap">
+              <span class="inline-block px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/60 font-mono text-[11px] text-amber-300 font-semibold" title="${sw.os_version || '-'}">
+                ${sw.os_version || '-'}
+              </span>
+            </td>
+
             <!-- Uptime -->
             <td class="py-2 px-3 text-right text-slate-300 font-medium whitespace-nowrap">
               ${sw.uptime}
@@ -807,7 +817,12 @@ class WidgetRegistry {
       let filtered = [...switches];
       const term = (searchInput?.value || '').toLowerCase().trim();
       if (term) {
-        filtered = filtered.filter(s => s.name.toLowerCase().includes(term) || (s.ip && s.ip.includes(term)));
+        filtered = filtered.filter(s => 
+          s.name.toLowerCase().includes(term) || 
+          (s.ip && s.ip.includes(term)) ||
+          (s.serial && s.serial.toLowerCase().includes(term)) ||
+          (s.os_version && s.os_version.toLowerCase().includes(term))
+        );
       }
 
       filtered.sort((a, b) => {
