@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zabbix Dashboard Studio & NOC (v7.0)</title>
+  <title>DTCEA-SJ NOC - Monitoramento</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -61,12 +61,10 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
-              <span>ZABBIX</span>
-              <span class="text-cyan-400">STUDIO</span>
+              <span>DTCEA-SJ</span>
+              <span class="text-cyan-400">NOC</span>
             </h1>
-            <span class="px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold">
-              DTCEA-SJ
-            </span>
+            
           </div>
           <div class="text-[11px] text-slate-400 font-medium truncate max-w-[200px]" id="dash-header-title">
             Carregando...

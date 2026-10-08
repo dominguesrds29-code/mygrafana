@@ -1,6 +1,6 @@
 {
   "id": "switch_analysis",
-  "title": "Dashboard Análise de Switches (NOC TV)",
+  "title": "Network Operations Center",
   "description": "Monitoramento em tempo real de switches e equipamentos de rede (Ping, Latência, Perdas, CPU, Memória, Temperatura e Uptime)",
   "refresh_interval": 40,
   "columns": 12,
