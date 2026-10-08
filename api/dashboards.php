@@ -65,7 +65,11 @@ switch ($action) {
         ];
         
         $file = DASHBOARDS_DIR . '/' . $id . '.json';
-        file_put_contents($file, json_encode($dashboardData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $written = file_put_contents($file, json_encode($dashboardData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        if ($written === false) {
+            echo json_encode(['error' => 'Falha ao salvar no disco. Verifique permissões de escrita na pasta data/dashboards/.']);
+            exit;
+        }
         echo json_encode(['success' => true, 'id' => $id, 'dashboard' => $dashboardData]);
         break;
 

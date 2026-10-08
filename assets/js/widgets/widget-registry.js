@@ -1,6 +1,7 @@
 /**
  * Widget Registry & Renderers for Zabbix Dashboards
  * Suporte a atualização em segundo plano sem cintilação / piscamento (Zero-Flicker)
+ * e filtros interativos de grupos e status de switches
  */
 
 const SEVERITY_CONFIG = {
@@ -10,11 +11,12 @@ const SEVERITY_CONFIG = {
   3: { label: 'Média', class: 'badge-average', bg: '#d97706' },
   4: { label: 'Alta', class: 'badge-high', bg: '#ea580c' },
   5: { label: 'Desastre', class: 'badge-disaster', bg: '#e11d48' }
- };
+};
 
 class WidgetRegistry {
   constructor() {
     this.charts = {}; // Armazena instâncias de ApexCharts para atualizar sem recriar
+    this.tables = {}; // Armazena instâncias e callbacks de tabelas ativas
   }
 
   // Destrói gráficos e limpa memória quando troca de dashboard
@@ -104,6 +106,7 @@ class WidgetRegistry {
   // 2. Widget: Stat Card / Cartão de Estatística
   async renderStatCard(widget, container) {
     const cardTheme = widget.config?.card_style || 'glass';
+    const metric = widget.config?.metric_type || 'problems_count';
     let bgClasses = 'bg-slate-900/40 border-white/5';
     let textValClass = 'text-slate-100';
     let iconBgClass = 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400';
@@ -130,6 +133,24 @@ class WidgetRegistry {
     let valEl = document.getElementById(`stat_val_${widget.id}`);
     let subEl = document.getElementById(`stat_sub_${widget.id}`);
 
+    // Configuração de clique para filtrar tabela caso seja métrica de switch
+    let clickAction = '';
+    let cursorClass = '';
+    let cardTitleTooltip = '';
+    if (metric === 'switches_total') {
+      clickAction = `onclick="app.filterSwitchesTableByStatus('all')"`;
+      cursorClass = 'cursor-pointer hover:brightness-110 active:scale-[0.99] transition transform';
+      cardTitleTooltip = 'Clique para ver todos os switches na tabela';
+    } else if (metric === 'switches_up') {
+      clickAction = `onclick="app.filterSwitchesTableByStatus('up')"`;
+      cursorClass = 'cursor-pointer hover:brightness-110 active:scale-[0.99] transition transform';
+      cardTitleTooltip = 'Clique para filtrar apenas switches UP (Online)';
+    } else if (metric === 'switches_down') {
+      clickAction = `onclick="app.filterSwitchesTableByStatus('down')"`;
+      cursorClass = 'cursor-pointer hover:brightness-110 active:scale-[0.99] transition transform';
+      cardTitleTooltip = 'Clique para filtrar apenas switches DOWN (Offline / Atenção)';
+    }
+
     // Monta a casca DOM apenas na primeira carga do widget
     if (!valEl || !subEl) {
       container.innerHTML = `
@@ -143,7 +164,7 @@ class WidgetRegistry {
             </button>
           </div>
         `}
-        <div class="flex-1 flex items-center justify-between p-4 ${cardTheme !== 'glass' ? bgClasses : ''}">
+        <div ${clickAction} title="${cardTitleTooltip}" class="flex-1 flex items-center justify-between p-4 ${cursorClass} ${cardTheme !== 'glass' ? bgClasses : ''}">
           <div>
             ${!showHeader ? `<div class="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-0.5">${widget.title}</div>` : ''}
             <div class="text-3xl font-black font-mono tracking-tight ${textValClass}" id="stat_val_${widget.id}">
@@ -168,7 +189,6 @@ class WidgetRegistry {
       subEl = document.getElementById(`stat_sub_${widget.id}`);
     }
 
-    const metric = widget.config?.metric_type || 'problems_count';
     if (!valEl) return;
 
     if (metric === 'switches_total' || metric === 'switches_up' || metric === 'switches_down') {
@@ -448,7 +468,6 @@ class WidgetRegistry {
     const fillColor = value > 90 ? '#e11d48' : (value > 75 ? '#d97706' : '#06b6d4');
 
     if (this.charts[widget.id]) {
-      // Atualização fluida sem piscar canvas
       this.charts[widget.id].updateOptions({
         fill: { colors: [fillColor] }
       }, false, true);
@@ -538,7 +557,6 @@ class WidgetRegistry {
     }
 
     if (this.charts[widget.id]) {
-      // Atualiza os pontos de série com animação suave, sem recriar gráfico
       this.charts[widget.id].updateSeries([{
         name: itemName,
         data: seriesData
@@ -630,6 +648,13 @@ class WidgetRegistry {
     `;
   }
 
+  // Método auxiliar para alterar o filtro de status da tabela externamente (ex: ao clicar nos cartões)
+  setSwitchesStatusFilter(widgetId, status) {
+    if (this.tables[widgetId] && typeof this.tables[widgetId].setStatusFilter === 'function') {
+      this.tables[widgetId].setStatusFilter(status);
+    }
+  }
+
   // 9. Widget: Tabela de Análise Geral de Switches (Estilo Grafana NOC)
   async renderSwitchesTable(widget, container) {
     const tableId = `sw_tbl_${widget.id}`;
@@ -645,6 +670,7 @@ class WidgetRegistry {
       widget._tableState = {
         sort: { col: 'name', dir: 'asc' },
         switches: [],
+        statusFilter: 'all', // 'all', 'up', 'down', 'sw_only'
         groupsLoaded: false
       };
     }
@@ -655,19 +681,33 @@ class WidgetRegistry {
       container.innerHTML = `
         ${this.renderHeader(widget)}
         <div class="p-2.5 border-b border-white/5 bg-slate-900/30 flex flex-wrap items-center justify-between gap-2">
+          
+          <!-- Filtros de Grupo, Busca e Status -->
           <div class="flex items-center flex-wrap gap-2">
-            <div class="relative w-56">
-              <input type="text" id="${searchId}" placeholder="Filtrar switch por nome ou IP..." 
+            <div class="relative w-52">
+              <input type="text" id="${searchId}" placeholder="Filtrar por nome ou IP..." 
                      class="w-full bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg pl-7 pr-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none transition">
               <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
-            <select id="${groupId}" class="bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none max-w-[200px] truncate cursor-pointer">
+
+            <!-- Dropdown com todos os grupos de hosts do Zabbix -->
+            <select id="${groupId}" class="bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg px-2.5 py-1 text-xs text-slate-200 outline-none max-w-[220px] truncate cursor-pointer font-medium">
               <option value="">📁 Todos os Grupos (Zabbix)</option>
             </select>
-            <span id="${countId}" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono font-semibold border border-slate-700">
+
+            <!-- Botões de Filtro Rápido (Todos / UP / DOWN / Só Switches) -->
+            <div class="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-[11px]">
+              <button id="sw_btn_all_${widget.id}" class="px-2 py-0.5 rounded text-xs font-semibold bg-cyan-600 text-white transition">Todos</button>
+              <button id="sw_btn_up_${widget.id}" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition">🟢 UP</button>
+              <button id="sw_btn_down_${widget.id}" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition">🔴 DOWN</button>
+              <button id="sw_btn_swonly_${widget.id}" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition" title="Filtrar somente equipamentos com 'SW' ou 'Switch' no nome">⚡ Só Switches</button>
+            </div>
+
+            <span id="${countId}" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono font-semibold border border-slate-700">
               Carregando...
             </span>
           </div>
+
           <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
             <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-active"></span>
             <span>Tempo Real</span>
@@ -726,15 +766,16 @@ class WidgetRegistry {
       groupSelect = document.getElementById(groupId);
       countBadge = document.getElementById(countId);
 
-      // Carrega grupos no dropdown apenas na primeira inicialização
-      if (groupSelect && !state.groupsLoaded) {
+      // Carrega os grupos de hosts reais do Zabbix no dropdown
+      const loadGroups = () => {
         window.zabbix.getHostGroups().then(groups => {
           if (groups && groups.length > 0 && groupSelect) {
+            groupSelect.innerHTML = '<option value="">📁 Todos os Grupos (Zabbix)</option>';
             groups.forEach(g => {
               const opt = document.createElement('option');
               opt.value = g.groupid;
               opt.textContent = `📁 ${g.name}`;
-              if (String(g.groupid) === String(currentGroupId)) {
+              if (String(g.groupid) === String(widget.config?.group_id || '')) {
                 opt.selected = true;
               }
               groupSelect.appendChild(opt);
@@ -742,13 +783,19 @@ class WidgetRegistry {
             state.groupsLoaded = true;
           }
         });
-      }
+      };
+      loadGroups();
 
       if (groupSelect) {
         groupSelect.onchange = async () => {
           const selGid = groupSelect.value || null;
           widget.config = widget.config || {};
-          widget.config.group_id = selGid;
+          widget.config.group_id = selGid || '';
+
+          // Grava a mudança do grupo no dashboard automaticamente
+          if (window.app) {
+            window.app.saveCurrentDashboard(true);
+          }
 
           const newData = await window.zabbix.getSwitchesAnalysis(selGid);
           state.switches = newData.switches || [];
@@ -759,6 +806,45 @@ class WidgetRegistry {
           }
         };
       }
+
+      // Eventos dos botões de filtro rápido
+      const updateFilterBtnStyles = () => {
+        const btnAll = document.getElementById(`sw_btn_all_${widget.id}`);
+        const btnUp = document.getElementById(`sw_btn_up_${widget.id}`);
+        const btnDown = document.getElementById(`sw_btn_down_${widget.id}`);
+        const btnSw = document.getElementById(`sw_btn_swonly_${widget.id}`);
+        const activeClass = 'bg-cyan-600 text-white font-semibold';
+        const inactiveClass = 'text-slate-400 hover:text-white font-medium bg-transparent';
+
+        [btnAll, btnUp, btnDown, btnSw].forEach(b => {
+          if (b) {
+            b.className = `px-2 py-0.5 rounded text-xs transition ${inactiveClass}`;
+          }
+        });
+
+        if (state.statusFilter === 'all' && btnAll) btnAll.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
+        if (state.statusFilter === 'up' && btnUp) btnUp.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
+        if (state.statusFilter === 'down' && btnDown) btnDown.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
+        if (state.statusFilter === 'sw_only' && btnSw) btnSw.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
+      };
+
+      const setStatusFilter = (st) => {
+        state.statusFilter = st;
+        updateFilterBtnStyles();
+        sortAndFilter();
+      };
+
+      this.tables[widget.id] = { setStatusFilter };
+
+      const btnAll = document.getElementById(`sw_btn_all_${widget.id}`);
+      const btnUp = document.getElementById(`sw_btn_up_${widget.id}`);
+      const btnDown = document.getElementById(`sw_btn_down_${widget.id}`);
+      const btnSw = document.getElementById(`sw_btn_swonly_${widget.id}`);
+
+      if (btnAll) btnAll.onclick = () => setStatusFilter('all');
+      if (btnUp) btnUp.onclick = () => setStatusFilter('up');
+      if (btnDown) btnDown.onclick = () => setStatusFilter('down');
+      if (btnSw) btnSw.onclick = () => setStatusFilter('sw_only');
 
       const headers = container.querySelectorAll('th[data-sort]');
       headers.forEach(th => {
@@ -786,7 +872,7 @@ class WidgetRegistry {
       if (cnt) cnt.textContent = `${list.length} Switches`;
 
       if (list.length === 0) {
-        tb.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-medium">Nenhum switch correspondente encontrado.</td></tr>`;
+        tb.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-medium">Nenhum switch correspondente encontrado com os filtros aplicados.</td></tr>`;
         return;
       }
 
@@ -882,10 +968,24 @@ class WidgetRegistry {
     const sortAndFilter = () => {
       const srch = document.getElementById(searchId);
       let filtered = [...state.switches];
+
+      // Filtro de status (Todos, UP, DOWN, ou Apenas Switches)
+      if (state.statusFilter === 'up') {
+        filtered = filtered.filter(s => s.ping === 1);
+      } else if (state.statusFilter === 'down') {
+        filtered = filtered.filter(s => s.ping !== 1);
+      } else if (state.statusFilter === 'sw_only') {
+        filtered = filtered.filter(s => {
+          const n = (s.name || '').toLowerCase();
+          return n.startsWith('sw') || n.includes('switch') || n.includes('sw-') || n.includes('sw_');
+        });
+      }
+
+      // Filtro por texto de busca
       const term = (srch?.value || '').toLowerCase().trim();
       if (term) {
         filtered = filtered.filter(s => 
-          s.name.toLowerCase().includes(term) || 
+          (s.name && s.name.toLowerCase().includes(term)) || 
           (s.ip && s.ip.includes(term)) ||
           (s.serial && s.serial.toLowerCase().includes(term)) ||
           (s.os_version && s.os_version.toLowerCase().includes(term))

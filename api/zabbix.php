@@ -162,10 +162,44 @@ switch ($action) {
         break;
 
     case 'hostgroups':
+        // 1. Tenta buscar grupos de hosts diretamente pelo método padrão do Zabbix
         $res = zabbix_rpc_request('hostgroup.get', [
             'output' => ['groupid', 'name'],
+            'real_hosts' => true,
             'sortfield' => 'name'
         ]);
+        if (isset($res['error']) || empty($res['result'])) {
+            $res = zabbix_rpc_request('hostgroup.get', [
+                'output' => ['groupid', 'name'],
+                'sortfield' => 'name'
+            ]);
+        }
+        // 2. Fallback resiliente: se a API do Zabbix restringir hostgroup.get, extrai os grupos a partir dos hosts permitidos
+        if (isset($res['error']) || empty($res['result'])) {
+            $hRes = zabbix_rpc_request('host.get', [
+                'output' => ['hostid'],
+                'selectGroups' => ['groupid', 'name']
+            ]);
+            if (!empty($hRes['result']) && is_array($hRes['result'])) {
+                $groupsMap = [];
+                foreach ($hRes['result'] as $h) {
+                    if (!empty($h['groups']) && is_array($h['groups'])) {
+                        foreach ($h['groups'] as $g) {
+                            $gid = (string)($g['groupid'] ?? '');
+                            $gname = $g['name'] ?? '';
+                            if (!empty($gid) && !empty($gname)) {
+                                $groupsMap[$gid] = [
+                                    'groupid' => $gid,
+                                    'name' => $gname
+                                ];
+                            }
+                        }
+                    }
+                }
+                usort($groupsMap, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+                $res = ['result' => array_values($groupsMap)];
+            }
+        }
         echo json_encode($res);
         break;
 

@@ -45,9 +45,13 @@ class App {
       resizable: { handles: 'e, se, s, sw, w' }
     });
 
-    // Quando mover ou redimensionar, salva estado local
+    // Quando mover ou redimensionar, salva coordenadas e persiste automaticamente no servidor
     this.grid.on('change', () => {
       this.syncGridToDashboardData();
+      if (this._saveTimeout) clearTimeout(this._saveTimeout);
+      this._saveTimeout = setTimeout(() => {
+        this.saveCurrentDashboard(true); // auto-save silencioso
+      }, 600);
     });
   }
 
@@ -147,24 +151,34 @@ class App {
     });
   }
 
-  async saveCurrentDashboard() {
+  async saveCurrentDashboard(silent = false) {
     this.syncGridToDashboardData();
     if (!this.currentDashboard) return;
 
     try {
+      const saveBtn = document.getElementById('btn-save-dashboard');
+      if (saveBtn) saveBtn.classList.add('opacity-70');
+
       const res = await fetch('api/dashboards.php?action=save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(this.currentDashboard)
       });
       const data = await res.json();
+      if (saveBtn) saveBtn.classList.remove('opacity-70');
+
       if (data.success) {
-        this.showToast('✅ Dashboard salvo com sucesso!');
-        await this.loadDashboardsList();
+        if (!silent) {
+          this.showToast('✅ Layout e posições salvos com sucesso!');
+        }
+      } else {
+        this.showToast('❌ ' + (data.error || 'Erro ao salvar dashboard.'));
       }
     } catch (e) {
       console.error(e);
-      this.showToast('❌ Erro ao salvar dashboard.');
+      if (!silent) {
+        this.showToast('❌ Erro ao salvar dashboard.');
+      }
     }
   }
 
@@ -328,6 +342,15 @@ class App {
         }
       }
     });
+  }
+
+  // Permite que clicar nos cartões de total/up/down filtre a tabela de switches
+  filterSwitchesTableByStatus(status) {
+    if (!this.currentDashboard) return;
+    const swTableWidget = this.currentDashboard.widgets.find(w => w.type === 'switches_table');
+    if (swTableWidget && window.widgetRegistry) {
+      window.widgetRegistry.setSwitchesStatusFilter(swTableWidget.id, status);
+    }
   }
 
   toggleKioskMode() {
