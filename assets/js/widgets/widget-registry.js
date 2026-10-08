@@ -623,7 +623,7 @@ class WidgetRegistry {
     if (container.querySelector('.brand-banner-content')) {
       return;
     }
-    const brandName = widget.config?.brand_name || 'BEE SOLUTIONS';
+    const brandName = widget.config?.brand_name || 'DTCEA-SJ';
     const subtitle = widget.config?.subtitle || 'NOC & NETWORK OPERATIONS CENTER';
 
     container.innerHTML = `

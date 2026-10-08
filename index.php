@@ -34,6 +34,7 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/png" href="dtcea_sj_logo.png">
 </head>
 <body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
 
@@ -54,8 +55,8 @@
       
       <!-- Brand & Dashboard Title -->
       <div class="flex items-center gap-3 shrink-0">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <div class="w-9 h-9 rounded-lg bg-slate-900/90 border border-slate-700/80 flex items-center justify-center shadow-lg shadow-cyan-500/10 p-1 shrink-0 overflow-hidden">
+          <img src="dtcea_sj_logo.png" alt="DTCEA-SJ" class="w-full h-full object-contain">
         </div>
         <div>
           <div class="flex items-center gap-2">
@@ -64,7 +65,7 @@
               <span class="text-cyan-400">STUDIO</span>
             </h1>
             <span class="px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold">
-              v7.0
+              DTCEA-SJ
             </span>
           </div>
           <div class="text-[11px] text-slate-400 font-medium truncate max-w-[200px]" id="dash-header-title">
@@ -157,7 +158,7 @@
           <select id="widget-type-select" onchange="editor.updateWidgetFormFields()"
                   class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
             <option value="switches_table">🔀 Tabela Análise de Switches / Servidores (Grafana Style)</option>
-            <option value="brand_banner">🏷️ Banner de Marca / Logo (Ex: BEE SOLUTIONS)</option>
+            <option value="brand_banner">🏷️ Banner de Marca / Logo (Ex: DTCEA-SJ)</option>
             <option value="problems_table">🚨 Tabela de Alarmes / Incidentes (Zabbix 7.0)</option>
             <option value="graph">📈 Gráfico Temporal de Métrica (ApexCharts)</option>
             <option value="gauge">🎯 Medidor Gauge (CPU, RAM, Disco %)</option>

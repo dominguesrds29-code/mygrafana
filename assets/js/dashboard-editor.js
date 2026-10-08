@@ -66,12 +66,12 @@ class DashboardEditor {
         <div class="space-y-3">
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">Nome da Empresa / Marca</label>
-            <input type="text" id="wcfg-brand-name" value="BEE SOLUTIONS" 
+            <input type="text" id="wcfg-brand-name" value="DTCEA-SJ" 
                    class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">Subtítulo / Descrição</label>
-            <input type="text" id="wcfg-subtitle" value="Análise de Switches (TV)" 
+            <input type="text" id="wcfg-subtitle" value="NOC & Network Operations Center" 
                    class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
           </div>
         </div>
@@ -163,8 +163,8 @@ class DashboardEditor {
         config.show_header = false;
       }
     } else if (type === 'brand_banner') {
-      config.brand_name = document.getElementById('wcfg-brand-name')?.value || 'BEE SOLUTIONS';
-      config.subtitle = document.getElementById('wcfg-subtitle')?.value || 'Análise de Switches (TV)';
+      config.brand_name = document.getElementById('wcfg-brand-name')?.value || 'DTCEA-SJ';
+      config.subtitle = document.getElementById('wcfg-subtitle')?.value || 'NOC & Network Operations Center';
     } else if (type === 'switches_table') {
       config.show_status = true;
       config.group_id = document.getElementById('wcfg-switch-group')?.value || '';
