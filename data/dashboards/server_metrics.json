@@ -2,7 +2,7 @@
     "id": "server_metrics",
     "title": "Métricas de Performance & Gráficos",
     "description": "Visualização de gráficos temporais, gauges e medidores de performance de infraestrutura",
-    "refresh_interval": 20,
+    "refresh_interval": 40,
     "columns": 12,
     "widgets": [
         {

@@ -2,7 +2,7 @@
     "id": "dash_1790952939655",
     "title": "Novo Painel NOC",
     "description": "Dashboard criado pelo usuário",
-    "refresh_interval": 30,
+    "refresh_interval": 40,
     "columns": 12,
     "widgets": [
         {

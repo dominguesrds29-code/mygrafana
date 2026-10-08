@@ -2,7 +2,7 @@
     "id": "noc_overview",
     "title": "Visão Geral NOC - Zabbix 7.0",
     "description": "Painel centralizado de monitoramento de incidentes, disponibilidade e métricas críticas",
-    "refresh_interval": 15,
+    "refresh_interval": 40,
     "columns": 12,
     "widgets": [
         {

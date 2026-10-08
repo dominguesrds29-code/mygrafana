@@ -1,5 +1,6 @@
 /**
  * Widget Registry & Renderers for Zabbix Dashboards
+ * Suporte a atualização em segundo plano sem cintilação / piscamento (Zero-Flicker)
  */
 
 const SEVERITY_CONFIG = {
@@ -9,11 +10,25 @@ const SEVERITY_CONFIG = {
   3: { label: 'Média', class: 'badge-average', bg: '#d97706' },
   4: { label: 'Alta', class: 'badge-high', bg: '#ea580c' },
   5: { label: 'Desastre', class: 'badge-disaster', bg: '#e11d48' }
-};
+ };
 
 class WidgetRegistry {
   constructor() {
-    this.charts = {}; // Armazena instâncias de gráficos para destruir/atualizar
+    this.charts = {}; // Armazena instâncias de ApexCharts para atualizar sem recriar
+  }
+
+  // Destrói gráficos e limpa memória quando troca de dashboard
+  destroyCharts() {
+    Object.keys(this.charts).forEach(id => {
+      try {
+        if (this.charts[id] && typeof this.charts[id].destroy === 'function') {
+          this.charts[id].destroy();
+        }
+      } catch (e) {
+        console.warn('Erro ao destruir chart:', e);
+      }
+    });
+    this.charts = {};
   }
 
   // Utilitário para formatar tempo decorrido
@@ -50,6 +65,10 @@ class WidgetRegistry {
 
   // 1. Widget: Relógio NOC
   renderClock(widget, container) {
+    if (container.querySelector(`#clock_time_${widget.id}`)) {
+      return; // Já está montado e com intervalo ativo
+    }
+
     container.innerHTML = `
       ${this.renderHeader(widget)}
       <div class="flex-1 flex flex-col justify-center items-center p-4">
@@ -78,14 +97,13 @@ class WidgetRegistry {
     };
 
     updateClock();
-    if (!widget._clockInterval) {
-      widget._clockInterval = setInterval(updateClock, 1000);
-    }
+    if (widget._clockInterval) clearInterval(widget._clockInterval);
+    widget._clockInterval = setInterval(updateClock, 1000);
   }
 
-  // 2. Widget: Stat Card / Cartão de Estatística (com suporte a temas sólidos como no Grafana)
+  // 2. Widget: Stat Card / Cartão de Estatística
   async renderStatCard(widget, container) {
-    const cardTheme = widget.config?.card_style || 'glass'; // glass, solid_blue, solid_green, solid_red, solid_amber
+    const cardTheme = widget.config?.card_style || 'glass';
     let bgClasses = 'bg-slate-900/40 border-white/5';
     let textValClass = 'text-slate-100';
     let iconBgClass = 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400';
@@ -109,43 +127,48 @@ class WidgetRegistry {
     }
 
     const showHeader = widget.config?.show_header !== false;
+    let valEl = document.getElementById(`stat_val_${widget.id}`);
+    let subEl = document.getElementById(`stat_sub_${widget.id}`);
 
-    container.innerHTML = `
-      ${showHeader ? this.renderHeader(widget) : `
-        <div class="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
-          <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-white text-slate-300 text-xs rounded" title="Configurar Card / Grupo de Hosts">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          </button>
-          <button onclick="app.removeWidget('${widget.id}')" class="p-1 hover:text-rose-400 text-slate-300 text-xs rounded" title="Remover">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </button>
-        </div>
-      `}
-      <div class="flex-1 flex items-center justify-between p-4 ${cardTheme !== 'glass' ? bgClasses : ''}">
-        <div>
-          ${!showHeader ? `<div class="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-0.5">${widget.title}</div>` : ''}
-          <div class="text-3xl font-black font-mono tracking-tight ${textValClass}" id="stat_val_${widget.id}">
-            <span class="animate-pulse text-white/50">...</span>
+    // Monta a casca DOM apenas na primeira carga do widget
+    if (!valEl || !subEl) {
+      container.innerHTML = `
+        ${showHeader ? this.renderHeader(widget) : `
+          <div class="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
+            <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-white text-slate-300 text-xs rounded" title="Configurar Card / Grupo de Hosts">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+            <button onclick="app.removeWidget('${widget.id}')" class="p-1 hover:text-rose-400 text-slate-300 text-xs rounded" title="Remover">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
           </div>
-          <div class="text-xs ${cardTheme !== 'glass' ? 'text-white/80' : 'text-slate-400'} mt-0.5 font-medium" id="stat_sub_${widget.id}">
-            Buscando dados...
+        `}
+        <div class="flex-1 flex items-center justify-between p-4 ${cardTheme !== 'glass' ? bgClasses : ''}">
+          <div>
+            ${!showHeader ? `<div class="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-0.5">${widget.title}</div>` : ''}
+            <div class="text-3xl font-black font-mono tracking-tight ${textValClass}" id="stat_val_${widget.id}">
+              <span class="animate-pulse text-white/50">...</span>
+            </div>
+            <div class="text-xs ${cardTheme !== 'glass' ? 'text-white/80' : 'text-slate-400'} mt-0.5 font-medium" id="stat_sub_${widget.id}">
+              Buscando dados...
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${iconBgClass}">
+            ${widget.config?.custom_icon === 'check' ? `
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            ` : (widget.config?.custom_icon === 'alert' ? `
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            ` : `
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            `)}
           </div>
         </div>
-        <div class="w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${iconBgClass}">
-          ${widget.config?.custom_icon === 'check' ? `
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-          ` : (widget.config?.custom_icon === 'alert' ? `
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-          ` : `
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          `)}
-        </div>
-      </div>
-    `;
+      `;
+      valEl = document.getElementById(`stat_val_${widget.id}`);
+      subEl = document.getElementById(`stat_sub_${widget.id}`);
+    }
 
     const metric = widget.config?.metric_type || 'problems_count';
-    const valEl = document.getElementById(`stat_val_${widget.id}`);
-    const subEl = document.getElementById(`stat_sub_${widget.id}`);
     if (!valEl) return;
 
     if (metric === 'switches_total' || metric === 'switches_up' || metric === 'switches_down') {
@@ -154,13 +177,13 @@ class WidgetRegistry {
       const sum = swData.summary || { total: 0, up: 0, down: 0 };
       if (metric === 'switches_total') {
         valEl.textContent = sum.total;
-        subEl.textContent = 'Switches Monitorados';
+        if (subEl) subEl.textContent = 'Switches Monitorados';
       } else if (metric === 'switches_up') {
         valEl.textContent = sum.up;
-        subEl.textContent = 'Operando Online (UP)';
+        if (subEl) subEl.textContent = 'Operando Online (UP)';
       } else if (metric === 'switches_down') {
         valEl.textContent = sum.down;
-        subEl.textContent = sum.down === 0 ? 'Nenhum switch fora' : `${sum.down} Offline / Atenção`;
+        if (subEl) subEl.textContent = sum.down === 0 ? 'Nenhum switch fora' : `${sum.down} Offline / Atenção`;
       }
       return;
     }
@@ -173,46 +196,51 @@ class WidgetRegistry {
         const avail = data.available_hosts || 0;
         const pct = total > 0 ? ((avail / total) * 100).toFixed(1) : '100';
         valEl.innerHTML = `${pct}% <span class="text-xs opacity-80">(${avail}/${total})</span>`;
-        subEl.textContent = 'Hosts operando normalmente';
+        if (subEl) subEl.textContent = 'Hosts operando normalmente';
       } else if (metric === 'problems_count') {
         const total = data.problems_total || 0;
         valEl.textContent = total;
-        subEl.textContent = total === 0 ? 'Tudo operando normalmente' : `${data.by_severity[5] || 0} Desastre(s), ${data.by_severity[4] || 0} Alto(s)`;
+        if (subEl) subEl.textContent = total === 0 ? 'Tudo operando normalmente' : `${data.by_severity[5] || 0} Desastre(s), ${data.by_severity[4] || 0} Alto(s)`;
       } else if (metric === 'problems_unack') {
         const unack = data.problems_unack || 0;
         valEl.textContent = unack;
-        subEl.textContent = 'Alertas não reconhecidos';
+        if (subEl) subEl.textContent = 'Alertas não reconhecidos';
       }
     } else {
       valEl.innerHTML = `<span class="text-white/70 text-base">39</span>`;
-      subEl.textContent = 'Demonstração NOC';
+      if (subEl) subEl.textContent = 'Demonstração NOC';
     }
   }
 
   // 3. Widget: Tabela de Problemas (Incidentes)
   async renderProblemsTable(widget, container) {
-    container.innerHTML = `
-      ${this.renderHeader(widget)}
-      <div class="flex-1 overflow-auto p-2">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="border-b border-white/10 text-slate-400 font-semibold">
-              <th class="pb-2 px-2">Severidade</th>
-              <th class="pb-2 px-2">Alarme / Problema</th>
-              <th class="pb-2 px-2">Tempo</th>
-              <th class="pb-2 px-2 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody id="prob_body_${widget.id}" class="divide-y divide-white/5">
-            <tr><td colspan="4" class="py-6 text-center text-slate-500">Buscando alarmes ativos no Zabbix...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    `;
+    let tbody = document.getElementById(`prob_body_${widget.id}`);
+    
+    // Monta a estrutura da tabela apenas se não existir
+    if (!tbody) {
+      container.innerHTML = `
+        ${this.renderHeader(widget)}
+        <div class="flex-1 overflow-auto p-2">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-white/10 text-slate-400 font-semibold">
+                <th class="pb-2 px-2">Severidade</th>
+                <th class="pb-2 px-2">Alarme / Problema</th>
+                <th class="pb-2 px-2">Tempo</th>
+                <th class="pb-2 px-2 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody id="prob_body_${widget.id}" class="divide-y divide-white/5">
+              <tr><td colspan="4" class="py-6 text-center text-slate-500">Buscando alarmes ativos no Zabbix...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+      tbody = document.getElementById(`prob_body_${widget.id}`);
+    }
 
     const limit = widget.config?.limit || 20;
     const problems = await window.zabbix.getProblems(limit);
-    const tbody = document.getElementById(`prob_body_${widget.id}`);
     if (!tbody) return;
 
     if (!problems || problems.length === 0) {
@@ -260,22 +288,27 @@ class WidgetRegistry {
 
   // 4. Widget: Grid de Status dos Hosts
   async renderHostStatusGrid(widget, container) {
-    container.innerHTML = `
-      ${this.renderHeader(widget)}
-      <div class="p-2 border-b border-white/5">
-        <input type="text" placeholder="Filtrar host..." id="host_search_${widget.id}" 
-               class="w-full bg-slate-900/80 border border-slate-700/60 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
-      </div>
-      <div class="flex-1 overflow-auto p-2">
-        <div id="host_grid_${widget.id}" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div class="col-span-full py-6 text-center text-slate-500">Carregando lista de hosts...</div>
+    let grid = document.getElementById(`host_grid_${widget.id}`);
+    let searchInput = document.getElementById(`host_search_${widget.id}`);
+
+    if (!grid || !searchInput) {
+      container.innerHTML = `
+        ${this.renderHeader(widget)}
+        <div class="p-2 border-b border-white/5">
+          <input type="text" placeholder="Filtrar host..." id="host_search_${widget.id}" 
+                 class="w-full bg-slate-900/80 border border-slate-700/60 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
         </div>
-      </div>
-    `;
+        <div class="flex-1 overflow-auto p-2">
+          <div id="host_grid_${widget.id}" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div class="col-span-full py-6 text-center text-slate-500">Carregando lista de hosts...</div>
+          </div>
+        </div>
+      `;
+      grid = document.getElementById(`host_grid_${widget.id}`);
+      searchInput = document.getElementById(`host_search_${widget.id}`);
+    }
 
     const hosts = await window.zabbix.getHosts();
-    const grid = document.getElementById(`host_grid_${widget.id}`);
-    const searchInput = document.getElementById(`host_search_${widget.id}`);
     if (!grid) return;
 
     const renderList = (filterText = '') => {
@@ -305,7 +338,7 @@ class WidgetRegistry {
       }).join('');
     };
 
-    renderList();
+    renderList(searchInput?.value || '');
     if (searchInput) {
       searchInput.oninput = (e) => renderList(e.target.value);
     }
@@ -313,19 +346,22 @@ class WidgetRegistry {
 
   // 5. Widget: Top N Recursos Consumidos
   async renderTopN(widget, container) {
-    container.innerHTML = `
-      ${this.renderHeader(widget)}
-      <div class="flex-1 overflow-auto p-3" id="top_n_body_${widget.id}">
-        <div class="py-6 text-center text-slate-500">Buscando itens e métricas...</div>
-      </div>
-    `;
+    let body = document.getElementById(`top_n_body_${widget.id}`);
+    if (!body) {
+      container.innerHTML = `
+        ${this.renderHeader(widget)}
+        <div class="flex-1 overflow-auto p-3" id="top_n_body_${widget.id}">
+          <div class="py-6 text-center text-slate-500">Buscando itens e métricas...</div>
+        </div>
+      `;
+      body = document.getElementById(`top_n_body_${widget.id}`);
+    }
 
     const searchKey = widget.config?.search_item || 'CPU';
     const unit = widget.config?.unit || '%';
     const limit = widget.config?.limit || 5;
 
     const items = await window.zabbix.getItems(null, searchKey);
-    const body = document.getElementById(`top_n_body_${widget.id}`);
     if (!body) return;
 
     if (!items || items.length === 0) {
@@ -333,7 +369,6 @@ class WidgetRegistry {
       return;
     }
 
-    // Ordena pelo lastvalue decrescente
     const validItems = items
       .map(i => ({
         ...i,
@@ -377,20 +412,25 @@ class WidgetRegistry {
 
   // 6. Widget: Gauge / Medidor Radial
   async renderGauge(widget, container) {
-    container.innerHTML = `
-      ${this.renderHeader(widget)}
-      <div class="flex-1 flex flex-col items-center justify-center p-2 relative">
-        <div id="chart_${widget.id}" class="w-full flex justify-center"></div>
-        <div class="text-xs text-slate-400 font-medium mt-[-10px] text-center truncate max-w-[80%]" id="gauge_label_${widget.id}">
-          Carregando...
+    let chartContainer = document.getElementById(`chart_${widget.id}`);
+    let labelEl = document.getElementById(`gauge_label_${widget.id}`);
+
+    if (!chartContainer || !labelEl) {
+      container.innerHTML = `
+        ${this.renderHeader(widget)}
+        <div class="flex-1 flex flex-col items-center justify-center p-2 relative">
+          <div id="chart_${widget.id}" class="w-full flex justify-center"></div>
+          <div class="text-xs text-slate-400 font-medium mt-[-10px] text-center truncate max-w-[80%]" id="gauge_label_${widget.id}">
+            Carregando...
+          </div>
         </div>
-      </div>
-    `;
+      `;
+      chartContainer = document.getElementById(`chart_${widget.id}`);
+      labelEl = document.getElementById(`gauge_label_${widget.id}`);
+    }
 
     const searchKey = widget.config?.search_item || 'CPU utilization';
     const items = await window.zabbix.getItems(null, searchKey);
-    const chartContainer = document.getElementById(`chart_${widget.id}`);
-    const labelEl = document.getElementById(`gauge_label_${widget.id}`);
     if (!chartContainer) return;
 
     let value = 0;
@@ -404,12 +444,20 @@ class WidgetRegistry {
 
     if (labelEl) labelEl.textContent = label;
 
+    const seriesVal = Math.min(100, Math.max(0, Math.round(value)));
+    const fillColor = value > 90 ? '#e11d48' : (value > 75 ? '#d97706' : '#06b6d4');
+
     if (this.charts[widget.id]) {
-      this.charts[widget.id].destroy();
+      // Atualização fluida sem piscar canvas
+      this.charts[widget.id].updateOptions({
+        fill: { colors: [fillColor] }
+      }, false, true);
+      this.charts[widget.id].updateSeries([seriesVal], true);
+      return;
     }
 
     const options = {
-      series: [Math.min(100, Math.max(0, Math.round(value)))],
+      series: [seriesVal],
       chart: {
         height: 180,
         type: 'radialBar',
@@ -438,7 +486,7 @@ class WidgetRegistry {
         }
       },
       fill: {
-        colors: [value > 90 ? '#e11d48' : (value > 75 ? '#d97706' : '#06b6d4')]
+        colors: [fillColor]
       },
       stroke: { dashArray: 4 }
     };
@@ -449,17 +497,20 @@ class WidgetRegistry {
 
   // 7. Widget: Gráfico Temporal de Histórico (ApexCharts)
   async renderGraph(widget, container) {
-    container.innerHTML = `
-      ${this.renderHeader(widget)}
-      <div class="flex-1 flex flex-col p-2 relative">
-        <div id="chart_${widget.id}" class="flex-1 w-full min-h-[160px]"></div>
-      </div>
-    `;
+    let chartContainer = document.getElementById(`chart_${widget.id}`);
+    if (!chartContainer) {
+      container.innerHTML = `
+        ${this.renderHeader(widget)}
+        <div class="flex-1 flex flex-col p-2 relative">
+          <div id="chart_${widget.id}" class="flex-1 w-full min-h-[160px]"></div>
+        </div>
+      `;
+      chartContainer = document.getElementById(`chart_${widget.id}`);
+    }
 
     const searchKey = widget.config?.search_item || 'CPU';
     const chartType = widget.config?.chart_type || 'area';
     const chartColor = widget.config?.color || '#38bdf8';
-    const chartContainer = document.getElementById(`chart_${widget.id}`);
     if (!chartContainer) return;
 
     const items = await window.zabbix.getItems(null, searchKey);
@@ -479,7 +530,6 @@ class WidgetRegistry {
       }
     }
 
-    // Se não tiver dados de histórico reais ainda, exibe placeholder suave
     if (seriesData.length === 0) {
       const now = Date.now();
       for (let i = 20; i >= 0; i--) {
@@ -488,7 +538,12 @@ class WidgetRegistry {
     }
 
     if (this.charts[widget.id]) {
-      this.charts[widget.id].destroy();
+      // Atualiza os pontos de série com animação suave, sem recriar gráfico
+      this.charts[widget.id].updateSeries([{
+        name: itemName,
+        data: seriesData
+      }], true);
+      return;
     }
 
     const options = {
@@ -545,14 +600,16 @@ class WidgetRegistry {
     this.charts[widget.id].render();
   }
 
-  // 8. Widget: Brand / Logo Banner (ex: BEE SOLUTIONS)
+  // 8. Widget: Brand / Logo Banner
   renderBrandBanner(widget, container) {
+    if (container.querySelector('.brand-banner-content')) {
+      return;
+    }
     const brandName = widget.config?.brand_name || 'BEE SOLUTIONS';
     const subtitle = widget.config?.subtitle || 'NOC & NETWORK OPERATIONS CENTER';
-    const accentColor = widget.config?.accent_color || '#0284c7';
 
     container.innerHTML = `
-      <div class="flex-1 flex flex-col justify-center px-5 py-3 relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-cyan-500/20 rounded-xl">
+      <div class="brand-banner-content flex-1 flex flex-col justify-center px-5 py-3 relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-cyan-500/20 rounded-xl">
         <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-cyan-500/10 to-transparent pointer-events-none"></div>
         <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-cyan-500/5 blur-xl pointer-events-none"></div>
         
@@ -579,135 +636,163 @@ class WidgetRegistry {
     const searchId = `sw_srch_${widget.id}`;
     const countId = `sw_cnt_${widget.id}`;
     const groupId = `sw_grp_${widget.id}`;
-    const currentGroupId = widget.config?.group_id || '';
+    let tbody = document.getElementById(`tbody_${widget.id}`);
+    let searchInput = document.getElementById(searchId);
+    let groupSelect = document.getElementById(groupId);
+    let countBadge = document.getElementById(countId);
 
-    container.innerHTML = `
-      ${this.renderHeader(widget)}
-      <div class="p-2.5 border-b border-white/5 bg-slate-900/30 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center flex-wrap gap-2">
-          <div class="relative w-56">
-            <input type="text" id="${searchId}" placeholder="Filtrar switch por nome ou IP..." 
-                   class="w-full bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg pl-7 pr-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none transition">
-            <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-          </div>
-          <select id="${groupId}" class="bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none max-w-[200px] truncate cursor-pointer">
-            <option value="">📁 Todos os Grupos (Zabbix)</option>
-          </select>
-          <span id="${countId}" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono font-semibold border border-slate-700">
-            Carregando...
-          </span>
-        </div>
-        <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-active"></span>
-          <span>Tempo Real</span>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-auto bg-[#0c121e]">
-        <table class="w-full text-left border-collapse text-xs" id="${tableId}">
-          <thead class="sticky top-0 bg-[#0f172a] z-10 select-none shadow-md border-b border-white/10">
-            <tr class="text-slate-300 font-bold uppercase tracking-wider text-[11px]">
-              <th data-sort="name" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center gap-1">Host <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="ping" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center justify-center gap-1">Ping <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="serial" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center justify-center gap-1">Serial Number <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="latency" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center justify-center gap-1">Latencia (ms) <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="cpu" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center gap-1">CPU (%) <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="memory" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center gap-1">Memoria (%) <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="temp" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center justify-center gap-1">Temperatura (C°) <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="os_version" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center justify-center gap-1">Versão SO / Firmware <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-              <th data-sort="uptime" class="py-2.5 px-3 text-right cursor-pointer hover:text-cyan-400 transition">
-                <div class="flex items-center justify-end gap-1">Uptime <span class="text-[9px] opacity-60">▽</span></div>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="tbody_${widget.id}" class="divide-y divide-white/[0.04]">
-            <tr>
-              <td colspan="9" class="py-12 text-center text-slate-500">
-                <div class="flex flex-col items-center justify-center gap-2">
-                  <span class="animate-spin text-cyan-400 text-xl">⏳</span>
-                  <span>Consultando dados de switches no Zabbix...</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    const initialGid = currentGroupId || null;
-    const data = await window.zabbix.getSwitchesAnalysis(initialGid);
-    let switches = data.switches || [];
-    const tbody = document.getElementById(`tbody_${widget.id}`);
-    const countBadge = document.getElementById(countId);
-    const searchInput = document.getElementById(searchId);
-    const groupSelect = document.getElementById(groupId);
-
-    // Carrega os grupos de hosts reais do Zabbix no dropdown
-    if (groupSelect) {
-      window.zabbix.getHostGroups().then(groups => {
-        if (groups && groups.length > 0) {
-          groups.forEach(g => {
-            const opt = document.createElement('option');
-            opt.value = g.groupid;
-            opt.textContent = `📁 ${g.name}`;
-            if (String(g.groupid) === String(currentGroupId)) {
-              opt.selected = true;
-            }
-            groupSelect.appendChild(opt);
-          });
-        }
-      });
-
-      groupSelect.onchange = async () => {
-        if (tbody) {
-          tbody.innerHTML = `<tr><td colspan="9" class="py-12 text-center text-slate-500"><div class="flex flex-col items-center justify-center gap-2"><span class="animate-spin text-cyan-400 text-xl">⏳</span><span>Carregando switches do grupo...</span></div></td></tr>`;
-        }
-        const selGid = groupSelect.value || null;
-        widget.config = widget.config || {};
-        widget.config.group_id = selGid;
-
-        const newData = await window.zabbix.getSwitchesAnalysis(selGid);
-        switches = newData.switches || [];
-        sortAndFilter();
-
-        // Atualiza em tempo real os cards de totais com a contagem deste grupo
-        if (window.app && newData.summary) {
-          window.app.updateStatCardsWithSummary(newData.summary, selGid);
-        }
+    if (!widget._tableState) {
+      widget._tableState = {
+        sort: { col: 'name', dir: 'asc' },
+        switches: [],
+        groupsLoaded: false
       };
     }
+    const state = widget._tableState;
 
-    let currentSort = { col: 'name', dir: 'asc' };
+    if (!tbody || !searchInput || !groupSelect) {
+      const currentGroupId = widget.config?.group_id || '';
+      container.innerHTML = `
+        ${this.renderHeader(widget)}
+        <div class="p-2.5 border-b border-white/5 bg-slate-900/30 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center flex-wrap gap-2">
+            <div class="relative w-56">
+              <input type="text" id="${searchId}" placeholder="Filtrar switch por nome ou IP..." 
+                     class="w-full bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg pl-7 pr-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none transition">
+              <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <select id="${groupId}" class="bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none max-w-[200px] truncate cursor-pointer">
+              <option value="">📁 Todos os Grupos (Zabbix)</option>
+            </select>
+            <span id="${countId}" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono font-semibold border border-slate-700">
+              Carregando...
+            </span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-active"></span>
+            <span>Tempo Real</span>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-auto bg-[#0c121e]">
+          <table class="w-full text-left border-collapse text-xs" id="${tableId}">
+            <thead class="sticky top-0 bg-[#0f172a] z-10 select-none shadow-md border-b border-white/10">
+              <tr class="text-slate-300 font-bold uppercase tracking-wider text-[11px]">
+                <th data-sort="name" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center gap-1">Host <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="ping" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center justify-center gap-1">Ping <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="serial" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center justify-center gap-1">Serial Number <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="latency" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center justify-center gap-1">Latencia (ms) <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="cpu" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center gap-1">CPU (%) <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="memory" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center gap-1">Memoria (%) <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="temp" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center justify-center gap-1">Temperatura (C°) <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="os_version" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center justify-center gap-1">Versão SO / Firmware <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+                <th data-sort="uptime" class="py-2.5 px-3 text-right cursor-pointer hover:text-cyan-400 transition">
+                  <div class="flex items-center justify-end gap-1">Uptime <span class="text-[9px] opacity-60">▽</span></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="tbody_${widget.id}" class="divide-y divide-white/[0.04]">
+              <tr>
+                <td colspan="9" class="py-12 text-center text-slate-500">
+                  <div class="flex flex-col items-center justify-center gap-2">
+                    <span class="animate-spin text-cyan-400 text-xl">⏳</span>
+                    <span>Consultando dados de switches no Zabbix...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      tbody = document.getElementById(`tbody_${widget.id}`);
+      searchInput = document.getElementById(searchId);
+      groupSelect = document.getElementById(groupId);
+      countBadge = document.getElementById(countId);
+
+      // Carrega grupos no dropdown apenas na primeira inicialização
+      if (groupSelect && !state.groupsLoaded) {
+        window.zabbix.getHostGroups().then(groups => {
+          if (groups && groups.length > 0 && groupSelect) {
+            groups.forEach(g => {
+              const opt = document.createElement('option');
+              opt.value = g.groupid;
+              opt.textContent = `📁 ${g.name}`;
+              if (String(g.groupid) === String(currentGroupId)) {
+                opt.selected = true;
+              }
+              groupSelect.appendChild(opt);
+            });
+            state.groupsLoaded = true;
+          }
+        });
+      }
+
+      if (groupSelect) {
+        groupSelect.onchange = async () => {
+          const selGid = groupSelect.value || null;
+          widget.config = widget.config || {};
+          widget.config.group_id = selGid;
+
+          const newData = await window.zabbix.getSwitchesAnalysis(selGid);
+          state.switches = newData.switches || [];
+          sortAndFilter();
+
+          if (window.app && newData.summary) {
+            window.app.updateStatCardsWithSummary(newData.summary, selGid);
+          }
+        };
+      }
+
+      const headers = container.querySelectorAll('th[data-sort]');
+      headers.forEach(th => {
+        th.onclick = () => {
+          const col = th.getAttribute('data-sort');
+          if (state.sort.col === col) {
+            state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            state.sort.col = col;
+            state.sort.dir = 'asc';
+          }
+          sortAndFilter();
+        };
+      });
+
+      if (searchInput) {
+        searchInput.oninput = () => sortAndFilter();
+      }
+    }
 
     const renderRows = (list) => {
-      if (!tbody) return;
-      if (countBadge) countBadge.textContent = `${list.length} Switches`;
+      const tb = document.getElementById(`tbody_${widget.id}`);
+      const cnt = document.getElementById(countId);
+      if (!tb) return;
+      if (cnt) cnt.textContent = `${list.length} Switches`;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-medium">Nenhum switch correspondente encontrado.</td></tr>`;
+        tb.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-medium">Nenhum switch correspondente encontrado.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = list.map(sw => {
+      tb.innerHTML = list.map(sw => {
         const isUp = sw.ping === 1;
         
-        // Formata Latência com cor do Grafana (Verde < 15, Laranja 15-30, Vermelho > 30)
         let latBgClass = 'bg-[#15803d]/90 text-white font-bold';
         if (!isUp || sw.latency === 0) {
           latBgClass = 'bg-slate-800 text-slate-400';
@@ -717,7 +802,6 @@ class WidgetRegistry {
           latBgClass = 'bg-[#ea580c] text-white font-bold';
         }
 
-        // Formata Temperatura (Verde < 40, Laranja 40-65, Vermelho > 65)
         let tempBgClass = 'bg-[#15803d]/90 text-white font-bold';
         if (sw.temp === 0) {
           tempBgClass = 'bg-slate-800 text-slate-400';
@@ -727,7 +811,6 @@ class WidgetRegistry {
           tempBgClass = 'bg-[#ea580c] text-white font-bold';
         }
 
-        // Formata Barras de Progresso CPU e Memória
         const cpuPct = Math.min(100, Math.max(0, sw.cpu));
         const memPct = Math.min(100, Math.max(0, sw.memory));
 
@@ -741,36 +824,27 @@ class WidgetRegistry {
 
         return `
           <tr class="hover:bg-white/[0.03] transition-colors group font-mono text-[11px]">
-            <!-- Host -->
             <td class="py-2 px-3 font-semibold text-slate-200 whitespace-nowrap">
               <div class="flex items-center gap-2">
                 <span class="truncate max-w-[170px]" title="${sw.name}">${sw.name}</span>
                 <span class="text-[9px] text-slate-500 font-normal">(${sw.ip})</span>
               </div>
             </td>
-
-            <!-- Ping -->
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
               <span class="inline-block w-16 py-1 rounded text-[11px] font-bold tracking-wide uppercase ${isUp ? 'bg-[#15803d] text-white' : 'bg-[#b91c1c] text-white animate-pulse'}">
                 ${isUp ? 'Up' : 'Down'}
               </span>
             </td>
-
-            <!-- Serial Number -->
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
               <span class="inline-block px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/60 font-mono text-[11px] text-cyan-300 font-semibold tracking-wider">
                 ${sw.serial || '-'}
               </span>
             </td>
-
-            <!-- Latencia (ms) -->
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
               <span class="inline-block w-20 py-1 rounded text-[11px] ${latBgClass}">
                 ${sw.latency > 0 ? sw.latency.toFixed(1) + ' ms' : '-'}
               </span>
             </td>
-
-            <!-- CPU (%) -->
             <td class="py-2 px-3 whitespace-nowrap">
               <div class="flex items-center gap-2">
                 <div class="w-24 h-4 bg-slate-900 rounded overflow-hidden border border-white/5 p-0.5">
@@ -779,8 +853,6 @@ class WidgetRegistry {
                 <span class="text-slate-300 font-bold w-10 text-right">${sw.cpu}%</span>
               </div>
             </td>
-
-            <!-- Memoria (%) -->
             <td class="py-2 px-3 whitespace-nowrap">
               <div class="flex items-center gap-2">
                 <div class="w-24 h-4 bg-slate-900 rounded overflow-hidden border border-white/5 p-0.5">
@@ -789,22 +861,16 @@ class WidgetRegistry {
                 <span class="text-slate-300 font-bold w-12 text-right">${sw.memory > 0 ? sw.memory.toFixed(1) + '%' : '-'}</span>
               </div>
             </td>
-
-            <!-- Temperatura (C°) -->
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
               <span class="inline-block w-20 py-1 rounded text-[11px] ${tempBgClass}">
                 ${sw.temp > 0 ? sw.temp.toFixed(1) + ' °C' : '-'}
               </span>
             </td>
-
-            <!-- Versão SO / Firmware -->
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
               <span class="inline-block px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/60 font-mono text-[11px] text-amber-300 font-semibold" title="${sw.os_version || '-'}">
                 ${sw.os_version || '-'}
               </span>
             </td>
-
-            <!-- Uptime -->
             <td class="py-2 px-3 text-right text-slate-300 font-medium whitespace-nowrap">
               ${sw.uptime}
             </td>
@@ -814,8 +880,9 @@ class WidgetRegistry {
     };
 
     const sortAndFilter = () => {
-      let filtered = [...switches];
-      const term = (searchInput?.value || '').toLowerCase().trim();
+      const srch = document.getElementById(searchId);
+      let filtered = [...state.switches];
+      const term = (srch?.value || '').toLowerCase().trim();
       if (term) {
         filtered = filtered.filter(s => 
           s.name.toLowerCase().includes(term) || 
@@ -826,39 +893,28 @@ class WidgetRegistry {
       }
 
       filtered.sort((a, b) => {
-        let valA = a[currentSort.col];
-        let valB = b[currentSort.col];
+        let valA = a[state.sort.col];
+        let valB = b[state.sort.col];
         if (typeof valA === 'string') valA = valA.toLowerCase();
         if (typeof valB === 'string') valB = valB.toLowerCase();
 
-        if (valA < valB) return currentSort.dir === 'asc' ? -1 : 1;
-        if (valA > valB) return currentSort.dir === 'asc' ? 1 : -1;
+        if (valA < valB) return state.sort.dir === 'asc' ? -1 : 1;
+        if (valA > valB) return state.sort.dir === 'asc' ? 1 : -1;
         return 0;
       });
 
       renderRows(filtered);
     };
 
+    // Busca dados em segundo plano sem destruir ou piscar a interface
+    const activeGid = groupSelect?.value || widget.config?.group_id || null;
+    const data = await window.zabbix.getSwitchesAnalysis(activeGid);
+    state.switches = data.switches || [];
     sortAndFilter();
 
-    if (searchInput) {
-      searchInput.oninput = () => sortAndFilter();
+    if (window.app && data.summary) {
+      window.app.updateStatCardsWithSummary(data.summary, activeGid);
     }
-
-    // Configura ordenação nas colunas
-    const headers = container.querySelectorAll('th[data-sort]');
-    headers.forEach(th => {
-      th.onclick = () => {
-        const col = th.getAttribute('data-sort');
-        if (currentSort.col === col) {
-          currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
-        } else {
-          currentSort.col = col;
-          currentSort.dir = 'asc';
-        }
-        sortAndFilter();
-      };
-    });
   }
 
   // Roteador de renderização

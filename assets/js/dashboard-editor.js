@@ -261,7 +261,7 @@ class DashboardEditor {
         document.getElementById('set-zabbix-url').value = data.settings.zabbix_url || '';
         document.getElementById('set-api-token').placeholder = data.settings.has_token ? `Token salvo (${data.settings.masked_token})` : 'Digite seu API Token do Zabbix 7.0';
         document.getElementById('set-verify-ssl').checked = !!data.settings.verify_ssl;
-        document.getElementById('set-refresh-interval').value = data.settings.refresh_interval || 30;
+        document.getElementById('set-refresh-interval').value = data.settings.refresh_interval || 40;
       }
     } catch (err) {
       console.error(err);
@@ -318,7 +318,7 @@ class DashboardEditor {
     const url = document.getElementById('set-zabbix-url').value;
     const token = document.getElementById('set-api-token').value;
     const verifySsl = document.getElementById('set-verify-ssl').checked;
-    const interval = parseInt(document.getElementById('set-refresh-interval').value || '30');
+    const interval = parseInt(document.getElementById('set-refresh-interval').value || '40');
 
     try {
       const res = await fetch('api/config.php?action=save', {

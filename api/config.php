@@ -29,7 +29,7 @@ switch ($action) {
                 'has_token' => !empty($settings['api_token']),
                 'masked_token' => $maskedToken,
                 'verify_ssl' => !empty($settings['verify_ssl']),
-                'refresh_interval' => intval($settings['refresh_interval'] ?? 30),
+                'refresh_interval' => intval($settings['refresh_interval'] ?? 40),
                 'theme' => $settings['theme'] ?? 'dark'
             ]
         ]);
@@ -50,7 +50,7 @@ switch ($action) {
             'zabbix_url' => $newUrl,
             'api_token' => $newToken,
             'verify_ssl' => !empty($input['verify_ssl']),
-            'refresh_interval' => intval($input['refresh_interval'] ?? 30),
+            'refresh_interval' => intval($input['refresh_interval'] ?? 40),
             'theme' => $input['theme'] ?? 'dark'
         ];
 

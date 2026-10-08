@@ -25,7 +25,7 @@ function get_app_settings() {
         'zabbix_url' => '',
         'api_token' => '',
         'verify_ssl' => false,
-        'refresh_interval' => 30, // segundos
+        'refresh_interval' => 40, // segundos
         'theme' => 'dark'
     ];
 }

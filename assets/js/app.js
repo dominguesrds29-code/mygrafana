@@ -8,7 +8,7 @@ class App {
     this.currentDashboard = null;
     this.dashboardsList = [];
     this.refreshTimer = null;
-    this.countdown = 30;
+    this.countdown = 40;
     this.countdownInterval = null;
     this.isEditMode = false;
     this.isKioskMode = false;
@@ -84,7 +84,7 @@ class App {
         localStorage.setItem('last_active_dashboard', id);
         this.renderActiveDashboard();
         this.renderDashboardDropdown();
-        this.countdown = this.currentDashboard.refresh_interval || 30;
+        this.countdown = this.currentDashboard.refresh_interval || 40;
       }
     } catch (e) {
       console.error('Erro ao carregar dashboard:', e);
@@ -93,6 +93,11 @@ class App {
 
   renderActiveDashboard() {
     if (!this.grid || !this.currentDashboard) return;
+
+    // Destrói instâncias de gráficos do dashboard anterior para liberar recursos
+    if (window.widgetRegistry && typeof window.widgetRegistry.destroyCharts === 'function') {
+      window.widgetRegistry.destroyCharts();
+    }
 
     // Limpa widgets anteriores do DOM e do gridstack
     this.grid.removeAll(true);
@@ -184,7 +189,7 @@ class App {
       id: 'dash_' + Date.now(),
       title: title,
       description: 'Dashboard criado pelo usuário',
-      refresh_interval: 30,
+      refresh_interval: 40,
       columns: 12,
       widgets: [
         {
@@ -266,7 +271,7 @@ class App {
   startAutoRefresh() {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
 
-    this.countdown = this.currentDashboard?.refresh_interval || 30;
+    this.countdown = this.currentDashboard?.refresh_interval || 40;
     this.updateTimerDisplay();
 
     this.countdownInterval = setInterval(() => {
@@ -275,7 +280,7 @@ class App {
 
       if (this.countdown <= 0) {
         this.refreshDashboardData();
-        this.countdown = this.currentDashboard?.refresh_interval || 30;
+        this.countdown = this.currentDashboard?.refresh_interval || 40;
       }
     }, 1000);
   }
@@ -283,6 +288,8 @@ class App {
   updateTimerDisplay() {
     const el = document.getElementById('refresh-counter');
     if (el) el.textContent = `${this.countdown}s`;
+    const kioskEl = document.getElementById('kiosk-refresh');
+    if (kioskEl) kioskEl.textContent = `${this.countdown}s`;
   }
 
   refreshDashboardData() {

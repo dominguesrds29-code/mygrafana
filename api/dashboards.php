@@ -57,7 +57,7 @@ switch ($action) {
             'id' => $id,
             'title' => $title,
             'description' => $input['description'] ?? '',
-            'refresh_interval' => intval($input['refresh_interval'] ?? 30),
+            'refresh_interval' => intval($input['refresh_interval'] ?? 40),
             'columns' => intval($input['columns'] ?? 12),
             'widgets' => $input['widgets'] ?? [],
             'created_at' => $input['created_at'] ?? time(),
