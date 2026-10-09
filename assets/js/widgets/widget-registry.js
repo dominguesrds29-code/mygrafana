@@ -912,8 +912,8 @@ class WidgetRegistry {
           <tr class="hover:bg-slate-800/50 transition-colors group font-mono text-[11px]">
             <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap">
               <div class="flex items-center gap-2">
-                <span class="truncate max-w-[180px]" title="${sw.name}">${sw.name}</span>
-                <span class="text-[10px] text-slate-300 font-semibold">(${sw.ip})</span>
+                <span class="text-[13px] tracking-tight font-extrabold text-white truncate max-w-[220px]" title="${sw.name}">${sw.name}</span>
+                <span class="text-[10px] text-slate-400 font-medium">(${sw.ip})</span>
               </div>
             </td>
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
