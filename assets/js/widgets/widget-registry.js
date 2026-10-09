@@ -46,18 +46,18 @@ class WidgetRegistry {
   // Renderiza o cabeçalho padrão de qualquer widget
   renderHeader(widget) {
     return `
-      <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/5 bg-slate-900/40 select-none">
+      <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-700/70 bg-slate-800/60 select-none">
         <div class="flex items-center gap-2 overflow-hidden">
-          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-          <h3 class="text-xs font-semibold text-slate-200 tracking-wide uppercase truncate" title="${widget.title}">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50"></span>
+          <h3 class="text-xs font-bold text-slate-100 tracking-wide uppercase truncate" title="${widget.title}">
             ${widget.title}
           </h3>
         </div>
-        <div class="flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
-          <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-cyan-400 text-slate-400 text-xs rounded" title="Configurar Painel / Filtro de Grupo">
+        <div class="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
+          <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-cyan-400 text-slate-300 text-xs rounded hover:bg-slate-700/50" title="Configurar Painel / Filtro de Grupo">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
           </button>
-          <button onclick="app.removeWidget('${widget.id}')" class="widget-delete-btn p-1 hover:text-rose-400 text-slate-400 text-xs rounded" title="Remover Widget">
+          <button onclick="app.removeWidget('${widget.id}')" class="widget-delete-btn p-1 hover:text-rose-400 text-slate-300 text-xs rounded hover:bg-slate-700/50" title="Remover Widget">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
@@ -74,14 +74,14 @@ class WidgetRegistry {
     container.innerHTML = `
       ${this.renderHeader(widget)}
       <div class="flex-1 flex flex-col justify-center items-center p-4">
-        <div id="clock_time_${widget.id}" class="text-3xl font-bold font-mono tracking-wider text-cyan-300 drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]">
+        <div id="clock_time_${widget.id}" class="text-4xl sm:text-5xl font-black font-mono tracking-wider text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]">
           --:--:--
         </div>
-        <div id="clock_date_${widget.id}" class="text-xs text-slate-400 font-medium mt-1">
+        <div id="clock_date_${widget.id}" class="text-sm text-slate-200 font-semibold mt-1.5">
           Carregando...
         </div>
         ${widget.config?.show_utc ? `
-          <div id="clock_utc_${widget.id}" class="text-[11px] font-mono text-slate-500 mt-2">
+          <div id="clock_utc_${widget.id}" class="text-xs font-mono text-slate-300 font-semibold mt-2">
             UTC: --:--:--
           </div>
         ` : ''}
@@ -107,26 +107,26 @@ class WidgetRegistry {
   async renderStatCard(widget, container) {
     const cardTheme = widget.config?.card_style || 'glass';
     const metric = widget.config?.metric_type || 'problems_count';
-    let bgClasses = 'bg-slate-900/40 border-white/5';
-    let textValClass = 'text-slate-100';
-    let iconBgClass = 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400';
+    let bgClasses = 'bg-slate-800/60 border-slate-700/60';
+    let textValClass = 'text-white';
+    let iconBgClass = 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300';
 
     if (cardTheme === 'solid_blue') {
-      bgClasses = 'bg-gradient-to-r from-blue-700 to-blue-600 border-blue-500/40 text-white';
+      bgClasses = 'bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 border-blue-400/40 text-white shadow-lg shadow-blue-900/30';
       textValClass = 'text-white drop-shadow-md';
-      iconBgClass = 'bg-white/15 border-white/20 text-white';
+      iconBgClass = 'bg-white/20 border-white/30 text-white';
     } else if (cardTheme === 'solid_green') {
-      bgClasses = 'bg-gradient-to-r from-emerald-700 to-emerald-600 border-emerald-500/40 text-white';
+      bgClasses = 'bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 border-emerald-400/40 text-white shadow-lg shadow-emerald-900/30';
       textValClass = 'text-white drop-shadow-md';
-      iconBgClass = 'bg-white/15 border-white/20 text-white';
+      iconBgClass = 'bg-white/20 border-white/30 text-white';
     } else if (cardTheme === 'solid_red') {
-      bgClasses = 'bg-gradient-to-r from-rose-800 to-rose-700 border-rose-500/40 text-white';
+      bgClasses = 'bg-gradient-to-br from-rose-600 via-rose-600 to-red-700 border-rose-400/40 text-white shadow-lg shadow-rose-900/30';
       textValClass = 'text-white drop-shadow-md';
-      iconBgClass = 'bg-white/15 border-white/20 text-white';
+      iconBgClass = 'bg-white/20 border-white/30 text-white';
     } else if (cardTheme === 'solid_amber') {
-      bgClasses = 'bg-gradient-to-r from-amber-700 to-amber-600 border-amber-500/40 text-white';
+      bgClasses = 'bg-gradient-to-br from-amber-600 via-amber-600 to-orange-700 border-amber-400/40 text-white shadow-lg shadow-amber-900/30';
       textValClass = 'text-white drop-shadow-md';
-      iconBgClass = 'bg-white/15 border-white/20 text-white';
+      iconBgClass = 'bg-white/20 border-white/30 text-white';
     }
 
     const showHeader = widget.config?.show_header !== false;
@@ -155,22 +155,22 @@ class WidgetRegistry {
     if (!valEl || !subEl) {
       container.innerHTML = `
         ${showHeader ? this.renderHeader(widget) : `
-          <div class="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
-            <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-white text-slate-300 text-xs rounded" title="Configurar Card / Grupo de Hosts">
+          <div class="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
+            <button onclick="editor.openEditWidgetModal('${widget.id}')" class="p-1 hover:text-white text-slate-200 text-xs rounded hover:bg-slate-700/40" title="Configurar Card / Grupo de Hosts">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </button>
-            <button onclick="app.removeWidget('${widget.id}')" class="p-1 hover:text-rose-400 text-slate-300 text-xs rounded" title="Remover">
+            <button onclick="app.removeWidget('${widget.id}')" class="p-1 hover:text-rose-300 text-slate-200 text-xs rounded hover:bg-slate-700/40" title="Remover">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
         `}
         <div ${clickAction} title="${cardTitleTooltip}" class="flex-1 flex items-center justify-between p-4 ${cursorClass} ${cardTheme !== 'glass' ? bgClasses : ''}">
           <div>
-            ${!showHeader ? `<div class="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-0.5">${widget.title}</div>` : ''}
-            <div class="text-3xl font-black font-mono tracking-tight ${textValClass}" id="stat_val_${widget.id}">
+            ${!showHeader ? `<div class="text-[12px] font-black uppercase tracking-wider text-white drop-shadow-sm mb-0.5">${widget.title}</div>` : ''}
+            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight ${textValClass}" id="stat_val_${widget.id}">
               <span class="animate-pulse text-white/50">...</span>
             </div>
-            <div class="text-xs ${cardTheme !== 'glass' ? 'text-white/80' : 'text-slate-400'} mt-0.5 font-medium" id="stat_sub_${widget.id}">
+            <div class="text-xs ${cardTheme !== 'glass' ? 'text-white/90 font-semibold' : 'text-slate-300 font-semibold'} mt-1" id="stat_sub_${widget.id}">
               Buscando dados...
             </div>
           </div>
@@ -215,7 +215,7 @@ class WidgetRegistry {
         const total = data.total_hosts || 0;
         const avail = data.available_hosts || 0;
         const pct = total > 0 ? ((avail / total) * 100).toFixed(1) : '100';
-        valEl.innerHTML = `${pct}% <span class="text-xs opacity-80">(${avail}/${total})</span>`;
+        valEl.innerHTML = `${pct}% <span class="text-xs opacity-90 font-bold">(${avail}/${total})</span>`;
         if (subEl) subEl.textContent = 'Hosts operando normalmente';
       } else if (metric === 'problems_count') {
         const total = data.problems_total || 0;
@@ -227,7 +227,7 @@ class WidgetRegistry {
         if (subEl) subEl.textContent = 'Alertas não reconhecidos';
       }
     } else {
-      valEl.innerHTML = `<span class="text-white/70 text-base">39</span>`;
+      valEl.innerHTML = `<span class="text-white text-base font-bold">39</span>`;
       if (subEl) subEl.textContent = 'Demonstração NOC';
     }
   }
@@ -240,18 +240,18 @@ class WidgetRegistry {
     if (!tbody) {
       container.innerHTML = `
         ${this.renderHeader(widget)}
-        <div class="flex-1 overflow-auto p-2">
+        <div class="flex-1 overflow-auto p-2 bg-slate-900/80">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
-              <tr class="border-b border-white/10 text-slate-400 font-semibold">
-                <th class="pb-2 px-2">Severidade</th>
-                <th class="pb-2 px-2">Alarme / Problema</th>
-                <th class="pb-2 px-2">Tempo</th>
-                <th class="pb-2 px-2 text-right">Status</th>
+              <tr class="border-b border-slate-700 bg-slate-800/90 text-slate-100 font-bold uppercase text-[11px]">
+                <th class="py-2.5 px-3">Severidade</th>
+                <th class="py-2.5 px-3">Alarme / Problema</th>
+                <th class="py-2.5 px-3">Tempo</th>
+                <th class="py-2.5 px-3 text-right">Status</th>
               </tr>
             </thead>
-            <tbody id="prob_body_${widget.id}" class="divide-y divide-white/5">
-              <tr><td colspan="4" class="py-6 text-center text-slate-500">Buscando alarmes ativos no Zabbix...</td></tr>
+            <tbody id="prob_body_${widget.id}" class="divide-y divide-slate-800">
+              <tr><td colspan="4" class="py-6 text-center text-slate-400 font-medium">Buscando alarmes ativos no Zabbix...</td></tr>
             </tbody>
           </table>
         </div>
@@ -269,7 +269,7 @@ class WidgetRegistry {
           <td colspan="4" class="py-8 text-center">
             <div class="flex flex-col items-center justify-center text-emerald-400">
               <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span class="font-medium">Nenhum incidente ativo no momento!</span>
+              <span class="font-bold text-sm">Nenhum incidente ativo no momento!</span>
             </div>
           </td>
         </tr>
@@ -282,24 +282,24 @@ class WidgetRegistry {
       const time = this.timeAgo(parseInt(p.clock));
       const isAck = p.acknowledged == '1';
       return `
-        <tr class="hover:bg-white/[0.03] transition-colors">
-          <td class="py-2 px-2 whitespace-nowrap">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${sev.class}">
+        <tr class="hover:bg-slate-800/60 transition-colors">
+          <td class="py-2 px-3 whitespace-nowrap">
+            <span class="px-2.5 py-1 rounded text-[11px] font-extrabold uppercase tracking-wider ${sev.class}">
               ${sev.label}
             </span>
           </td>
-          <td class="py-2 px-2 font-medium text-slate-200">
+          <td class="py-2 px-3 font-semibold text-slate-100">
             <div class="truncate max-w-md" title="${p.name}">
               ${p.name}
             </div>
           </td>
-          <td class="py-2 px-2 whitespace-nowrap text-slate-400 font-mono text-[11px]">
+          <td class="py-2 px-3 whitespace-nowrap text-slate-300 font-mono text-[11px] font-semibold">
             ${time}
           </td>
-          <td class="py-2 px-2 text-right whitespace-nowrap">
+          <td class="py-2 px-3 text-right whitespace-nowrap">
             ${isAck 
-              ? '<span class="text-emerald-400 text-[11px]">✓ Reconhecido</span>' 
-              : '<span class="text-rose-400 font-semibold text-[11px]">⚠️ Não Reconhecido</span>'}
+              ? '<span class="text-emerald-400 font-bold text-[11px]">✓ Reconhecido</span>' 
+              : '<span class="text-rose-400 font-bold text-[11px]">⚠️ Não Reconhecido</span>'}
           </td>
         </tr>
       `;
@@ -314,13 +314,13 @@ class WidgetRegistry {
     if (!grid || !searchInput) {
       container.innerHTML = `
         ${this.renderHeader(widget)}
-        <div class="p-2 border-b border-white/5">
+        <div class="p-2 border-b border-slate-700/80 bg-slate-800/50">
           <input type="text" placeholder="Filtrar host..." id="host_search_${widget.id}" 
-                 class="w-full bg-slate-900/80 border border-slate-700/60 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                 class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400">
         </div>
-        <div class="flex-1 overflow-auto p-2">
+        <div class="flex-1 overflow-auto p-2.5 bg-slate-900/80">
           <div id="host_grid_${widget.id}" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div class="col-span-full py-6 text-center text-slate-500">Carregando lista de hosts...</div>
+            <div class="col-span-full py-6 text-center text-slate-400 font-medium">Carregando lista de hosts...</div>
           </div>
         </div>
       `;
@@ -334,7 +334,7 @@ class WidgetRegistry {
     const renderList = (filterText = '') => {
       const filtered = hosts.filter(h => h.name.toLowerCase().includes(filterText.toLowerCase()) || h.host.toLowerCase().includes(filterText.toLowerCase()));
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-4 text-center text-slate-500">Nenhum host encontrado.</div>`;
+        grid.innerHTML = `<div class="col-span-full py-4 text-center text-slate-400 font-medium">Nenhum host encontrado.</div>`;
         return;
       }
 
@@ -342,14 +342,14 @@ class WidgetRegistry {
         const isUp = h.status === '0' && (h.available === '1' || h.available === '0');
         const ip = h.interfaces?.[0]?.ip || 'Sem IP';
         return `
-          <div class="p-2 rounded-lg bg-slate-900/60 border border-white/5 hover:border-slate-600 transition flex items-center justify-between">
+          <div class="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:border-slate-500 transition flex items-center justify-between shadow-sm">
             <div class="overflow-hidden">
-              <div class="text-xs font-semibold text-slate-200 truncate" title="${h.name}">${h.name}</div>
-              <div class="text-[10px] text-slate-400 font-mono">${ip}</div>
+              <div class="text-xs font-bold text-white truncate" title="${h.name}">${h.name}</div>
+              <div class="text-[11px] text-slate-300 font-mono font-medium">${ip}</div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-              <span class="w-2.5 h-2.5 rounded-full ${isUp ? 'bg-emerald-500 pulse-active' : 'bg-rose-500'}"></span>
-              <span class="text-[10px] ${isUp ? 'text-emerald-400' : 'text-rose-400'} font-medium">
+              <span class="w-3 h-3 rounded-full ${isUp ? 'bg-emerald-500 pulse-active' : 'bg-rose-500'}"></span>
+              <span class="text-[11px] ${isUp ? 'text-emerald-400' : 'text-rose-400'} font-extrabold">
                 ${isUp ? 'UP' : 'DOWN'}
               </span>
             </div>
@@ -370,8 +370,8 @@ class WidgetRegistry {
     if (!body) {
       container.innerHTML = `
         ${this.renderHeader(widget)}
-        <div class="flex-1 overflow-auto p-3" id="top_n_body_${widget.id}">
-          <div class="py-6 text-center text-slate-500">Buscando itens e métricas...</div>
+        <div class="flex-1 overflow-auto p-3.5 bg-slate-900/80" id="top_n_body_${widget.id}">
+          <div class="py-6 text-center text-slate-400 font-medium">Buscando itens e métricas...</div>
         </div>
       `;
       body = document.getElementById(`top_n_body_${widget.id}`);
@@ -385,7 +385,7 @@ class WidgetRegistry {
     if (!body) return;
 
     if (!items || items.length === 0) {
-      body.innerHTML = `<div class="py-6 text-center text-slate-500">Nenhum item encontrado com o termo "${searchKey}".</div>`;
+      body.innerHTML = `<div class="py-6 text-center text-slate-400 font-medium">Nenhum item encontrado com o termo "${searchKey}".</div>`;
       return;
     }
 
@@ -399,7 +399,7 @@ class WidgetRegistry {
       .slice(0, limit);
 
     body.innerHTML = `
-      <div class="space-y-3">
+      <div class="space-y-3.5">
         ${validItems.map((item, idx) => {
           const pct = Math.min(100, Math.max(0, item.valNum));
           let colorClass = 'bg-cyan-500';
@@ -409,18 +409,18 @@ class WidgetRegistry {
           return `
             <div>
               <div class="flex justify-between items-center text-xs mb-1">
-                <div class="flex items-center gap-1.5 truncate">
-                  <span class="w-4 h-4 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px] flex items-center justify-center font-bold">
+                <div class="flex items-center gap-2 truncate">
+                  <span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 text-cyan-300 font-mono text-[11px] flex items-center justify-center font-black">
                     ${idx + 1}
                   </span>
-                  <span class="text-slate-200 font-medium truncate" title="${item.hostName}">${item.hostName}</span>
-                  <span class="text-[10px] text-slate-500 truncate">- ${item.name}</span>
+                  <span class="text-white font-bold truncate" title="${item.hostName}">${item.hostName}</span>
+                  <span class="text-[11px] text-slate-300 truncate">- ${item.name}</span>
                 </div>
-                <div class="font-mono font-bold text-slate-100 shrink-0 ml-2">
+                <div class="font-mono font-black text-white shrink-0 ml-2 text-xs">
                   ${item.valNum.toFixed(1)}${unit}
                 </div>
               </div>
-              <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
                 <div class="h-full ${colorClass} transition-all duration-500 rounded-full" style="width: ${pct}%"></div>
               </div>
             </div>
@@ -438,9 +438,9 @@ class WidgetRegistry {
     if (!chartContainer || !labelEl) {
       container.innerHTML = `
         ${this.renderHeader(widget)}
-        <div class="flex-1 flex flex-col items-center justify-center p-2 relative">
+        <div class="flex-1 flex flex-col items-center justify-center p-3 relative bg-slate-900/60">
           <div id="chart_${widget.id}" class="w-full flex justify-center"></div>
-          <div class="text-xs text-slate-400 font-medium mt-[-10px] text-center truncate max-w-[80%]" id="gauge_label_${widget.id}">
+          <div class="text-xs text-slate-200 font-bold mt-[-10px] text-center truncate max-w-[85%]" id="gauge_label_${widget.id}">
             Carregando...
           </div>
         </div>
@@ -465,7 +465,7 @@ class WidgetRegistry {
     if (labelEl) labelEl.textContent = label;
 
     const seriesVal = Math.min(100, Math.max(0, Math.round(value)));
-    const fillColor = value > 90 ? '#e11d48' : (value > 75 ? '#d97706' : '#06b6d4');
+    const fillColor = value > 90 ? '#f43f5e' : (value > 75 ? '#f59e0b' : '#06b6d4');
 
     if (this.charts[widget.id]) {
       this.charts[widget.id].updateOptions({
@@ -478,7 +478,7 @@ class WidgetRegistry {
     const options = {
       series: [seriesVal],
       chart: {
-        height: 180,
+        height: 190,
         type: 'radialBar',
         sparkline: { enabled: true }
       },
@@ -488,17 +488,17 @@ class WidgetRegistry {
           endAngle: 135,
           hollow: { size: '65%' },
           track: {
-            background: 'rgba(255, 255, 255, 0.05)',
+            background: 'rgba(255, 255, 255, 0.1)',
             strokeWidth: '100%'
           },
           dataLabels: {
             name: { show: false },
             value: {
               offsetY: 8,
-              fontSize: '22px',
-              fontWeight: '700',
+              fontSize: '24px',
+              fontWeight: '800',
               fontFamily: 'JetBrains Mono',
-              color: '#f8fafc',
+              color: '#ffffff',
               formatter: (val) => val + (widget.config?.unit || '%')
             }
           }
@@ -520,7 +520,7 @@ class WidgetRegistry {
     if (!chartContainer) {
       container.innerHTML = `
         ${this.renderHeader(widget)}
-        <div class="flex-1 flex flex-col p-2 relative">
+        <div class="flex-1 flex flex-col p-2.5 relative bg-slate-900/60">
           <div id="chart_${widget.id}" class="flex-1 w-full min-h-[160px]"></div>
         </div>
       `;
@@ -578,20 +578,20 @@ class WidgetRegistry {
       },
       colors: [chartColor],
       dataLabels: { enabled: false },
-      stroke: { curve: 'smooth', width: 2 },
+      stroke: { curve: 'smooth', width: 2.5 },
       fill: {
         type: 'gradient',
         gradient: {
           shadeIntensity: 1,
-          opacityFrom: 0.45,
-          opacityTo: 0.05,
+          opacityFrom: 0.55,
+          opacityTo: 0.08,
           stops: [0, 95, 100]
         }
       },
       xaxis: {
         type: 'datetime',
         labels: {
-          style: { colors: '#64748b', fontSize: '10px', fontFamily: 'JetBrains Mono' },
+          style: { colors: '#94a3b8', fontSize: '11px', fontFamily: 'JetBrains Mono', fontWeight: 600 },
           datetimeUTC: false,
           format: 'HH:mm'
         },
@@ -600,12 +600,12 @@ class WidgetRegistry {
       },
       yaxis: {
         labels: {
-          style: { colors: '#64748b', fontSize: '10px', fontFamily: 'JetBrains Mono' },
+          style: { colors: '#94a3b8', fontSize: '11px', fontFamily: 'JetBrains Mono', fontWeight: 600 },
           formatter: (val) => val.toFixed(1)
         }
       },
       grid: {
-        borderColor: 'rgba(255, 255, 255, 0.05)',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
         strokeDashArray: 3
       },
       tooltip: {
@@ -627,19 +627,19 @@ class WidgetRegistry {
     const subtitle = widget.config?.subtitle || 'NOC & NETWORK OPERATIONS CENTER';
 
     container.innerHTML = `
-      <div class="brand-banner-content flex-1 flex flex-col justify-center px-5 py-3 relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-cyan-500/20 rounded-xl">
-        <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-cyan-500/10 to-transparent pointer-events-none"></div>
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-cyan-500/5 blur-xl pointer-events-none"></div>
+      <div class="brand-banner-content flex-1 flex flex-col justify-center px-5 py-3 relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-cyan-500/30 rounded-xl shadow-lg">
+        <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-cyan-500/15 to-transparent pointer-events-none"></div>
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-cyan-500/10 blur-xl pointer-events-none"></div>
         
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 shrink-0">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
           </div>
           <div class="overflow-hidden">
-            <div class="text-lg font-black tracking-wider text-cyan-400 font-mono uppercase drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]">
+            <div class="text-xl font-black tracking-wider text-white font-mono uppercase drop-shadow-[0_0_12px_rgba(6,182,212,0.5)]">
               ${brandName}
             </div>
-            <div class="text-[10px] font-semibold tracking-widest text-slate-400 uppercase truncate">
+            <div class="text-[11px] font-bold tracking-widest text-cyan-300 uppercase truncate">
               ${subtitle}
             </div>
           </div>
@@ -680,79 +680,79 @@ class WidgetRegistry {
       const currentGroupId = widget.config?.group_id || '';
       container.innerHTML = `
         ${this.renderHeader(widget)}
-        <div class="p-2.5 border-b border-white/5 bg-slate-900/30 flex flex-wrap items-center justify-between gap-2">
+        <div class="p-2.5 border-b border-slate-700/80 bg-slate-800/70 flex flex-wrap items-center justify-between gap-2 shadow-sm">
           
           <!-- Filtros de Grupo, Busca e Status -->
           <div class="flex items-center flex-wrap gap-2">
-            <div class="relative w-52">
+            <div class="relative w-56">
               <input type="text" id="${searchId}" placeholder="Filtrar por nome ou IP..." 
-                     class="w-full bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg pl-7 pr-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none transition">
+                     class="w-full bg-slate-900 border border-slate-600 focus:border-cyan-400 rounded-lg pl-7 pr-2.5 py-1 text-xs text-white placeholder-slate-400 font-medium outline-none transition shadow-sm">
               <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
 
             <!-- Dropdown com todos os grupos de hosts do Zabbix -->
-            <select id="${groupId}" class="bg-slate-900/90 border border-slate-700/70 focus:border-cyan-500 rounded-lg px-2.5 py-1 text-xs text-slate-200 outline-none max-w-[220px] truncate cursor-pointer font-medium">
+            <select id="${groupId}" class="bg-slate-900 border border-slate-600 focus:border-cyan-400 rounded-lg px-3 py-1 text-xs text-white outline-none max-w-[230px] truncate cursor-pointer font-semibold shadow-sm">
               <option value="">📁 Todos os Grupos (Zabbix)</option>
             </select>
 
             <!-- Botões de Filtro Rápido (Todos / UP / DOWN / Só Switches) -->
-            <div class="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-[11px]">
-              <button id="sw_btn_all_${widget.id}" class="px-2 py-0.5 rounded text-xs font-semibold bg-cyan-600 text-white transition">Todos</button>
-              <button id="sw_btn_up_${widget.id}" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition">🟢 UP</button>
-              <button id="sw_btn_down_${widget.id}" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition">🔴 DOWN</button>
-              <button id="sw_btn_swonly_${widget.id}" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white transition" title="Filtrar somente equipamentos com 'SW' ou 'Switch' no nome">⚡ Só Switches</button>
+            <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-700 text-[11px] shadow-sm">
+              <button id="sw_btn_all_${widget.id}" class="px-2.5 py-0.5 rounded text-xs font-bold bg-cyan-600 text-white shadow-sm transition">Todos</button>
+              <button id="sw_btn_up_${widget.id}" class="px-2.5 py-0.5 rounded text-xs font-semibold text-slate-300 hover:text-white transition">🟢 UP</button>
+              <button id="sw_btn_down_${widget.id}" class="px-2.5 py-0.5 rounded text-xs font-semibold text-slate-300 hover:text-white transition">🔴 DOWN</button>
+              <button id="sw_btn_swonly_${widget.id}" class="px-2.5 py-0.5 rounded text-xs font-semibold text-slate-300 hover:text-white transition" title="Filtrar somente equipamentos com 'SW' ou 'Switch' no nome">⚡ Só Switches</button>
             </div>
 
-            <span id="${countId}" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono font-semibold border border-slate-700">
+            <span id="${countId}" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-cyan-300 text-[11px] font-mono font-bold border border-slate-600 shadow-sm">
               Carregando...
             </span>
           </div>
 
-          <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-active"></span>
+          <div class="flex items-center gap-1.5 text-xs text-slate-200 font-semibold">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-active"></span>
             <span>Tempo Real</span>
           </div>
         </div>
 
-        <div class="flex-1 overflow-auto bg-[#0c121e]">
+        <div class="flex-1 overflow-auto bg-slate-900/90">
           <table class="w-full text-left border-collapse text-xs" id="${tableId}">
-            <thead class="sticky top-0 bg-[#0f172a] z-10 select-none shadow-md border-b border-white/10">
-              <tr class="text-slate-300 font-bold uppercase tracking-wider text-[11px]">
-                <th data-sort="name" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center gap-1">Host <span class="text-[9px] opacity-60">▽</span></div>
+            <thead class="sticky top-0 bg-slate-800 z-10 select-none shadow-md border-b-2 border-slate-700">
+              <tr class="text-slate-100 font-extrabold uppercase tracking-wider text-[11px]">
+                <th data-sort="name" class="py-2.5 px-3 cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center gap-1">Host <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="ping" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center justify-center gap-1">Ping <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="ping" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center justify-center gap-1">Ping <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="serial" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center justify-center gap-1">Serial Number <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="serial" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center justify-center gap-1">Serial Number <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="latency" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center justify-center gap-1">Latencia (ms) <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="latency" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center justify-center gap-1">Latência (ms) <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="cpu" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center gap-1">CPU (%) <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="cpu" class="py-2.5 px-3 cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center gap-1">CPU (%) <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="memory" class="py-2.5 px-3 cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center gap-1">Memoria (%) <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="memory" class="py-2.5 px-3 cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center gap-1">Memória (%) <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="temp" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center justify-center gap-1">Temperatura (C°) <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="temp" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center justify-center gap-1">Temperatura (C°) <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="os_version" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center justify-center gap-1">Versão SO / Firmware <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="os_version" class="py-2.5 px-3 text-center cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center justify-center gap-1">Versão SO / Firmware <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
-                <th data-sort="uptime" class="py-2.5 px-3 text-right cursor-pointer hover:text-cyan-400 transition">
-                  <div class="flex items-center justify-end gap-1">Uptime <span class="text-[9px] opacity-60">▽</span></div>
+                <th data-sort="uptime" class="py-2.5 px-3 text-right cursor-pointer hover:text-cyan-300 transition">
+                  <div class="flex items-center justify-end gap-1">Uptime <span class="text-[9px] opacity-70">▽</span></div>
                 </th>
               </tr>
             </thead>
-            <tbody id="tbody_${widget.id}" class="divide-y divide-white/[0.04]">
+            <tbody id="tbody_${widget.id}" class="divide-y divide-slate-800">
               <tr>
-                <td colspan="9" class="py-12 text-center text-slate-500">
+                <td colspan="9" class="py-12 text-center text-slate-400 font-medium">
                   <div class="flex flex-col items-center justify-center gap-2">
-                    <span class="animate-spin text-cyan-400 text-xl">⏳</span>
-                    <span>Consultando dados de switches no Zabbix...</span>
+                    <span class="animate-spin text-cyan-400 text-2xl">⏳</span>
+                    <span class="text-sm">Consultando dados de switches no Zabbix...</span>
                   </div>
                 </td>
               </tr>
@@ -813,19 +813,19 @@ class WidgetRegistry {
         const btnUp = document.getElementById(`sw_btn_up_${widget.id}`);
         const btnDown = document.getElementById(`sw_btn_down_${widget.id}`);
         const btnSw = document.getElementById(`sw_btn_swonly_${widget.id}`);
-        const activeClass = 'bg-cyan-600 text-white font-semibold';
-        const inactiveClass = 'text-slate-400 hover:text-white font-medium bg-transparent';
+        const activeClass = 'bg-cyan-600 text-white font-bold shadow-sm';
+        const inactiveClass = 'text-slate-300 hover:text-white font-semibold bg-transparent';
 
         [btnAll, btnUp, btnDown, btnSw].forEach(b => {
           if (b) {
-            b.className = `px-2 py-0.5 rounded text-xs transition ${inactiveClass}`;
+            b.className = `px-2.5 py-0.5 rounded text-xs transition ${inactiveClass}`;
           }
         });
 
-        if (state.statusFilter === 'all' && btnAll) btnAll.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
-        if (state.statusFilter === 'up' && btnUp) btnUp.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
-        if (state.statusFilter === 'down' && btnDown) btnDown.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
-        if (state.statusFilter === 'sw_only' && btnSw) btnSw.className = `px-2 py-0.5 rounded text-xs transition ${activeClass}`;
+        if (state.statusFilter === 'all' && btnAll) btnAll.className = `px-2.5 py-0.5 rounded text-xs transition ${activeClass}`;
+        if (state.statusFilter === 'up' && btnUp) btnUp.className = `px-2.5 py-0.5 rounded text-xs transition ${activeClass}`;
+        if (state.statusFilter === 'down' && btnDown) btnDown.className = `px-2.5 py-0.5 rounded text-xs transition ${activeClass}`;
+        if (state.statusFilter === 'sw_only' && btnSw) btnSw.className = `px-2.5 py-0.5 rounded text-xs transition ${activeClass}`;
       };
 
       const setStatusFilter = (st) => {
@@ -872,25 +872,25 @@ class WidgetRegistry {
       if (cnt) cnt.textContent = `${list.length} Switches`;
 
       if (list.length === 0) {
-        tb.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-medium">Nenhum switch correspondente encontrado com os filtros aplicados.</td></tr>`;
+        tb.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400 font-semibold">Nenhum switch correspondente encontrado com os filtros aplicados.</td></tr>`;
         return;
       }
 
       tb.innerHTML = list.map(sw => {
         const isUp = sw.ping === 1;
         
-        let latBgClass = 'bg-[#15803d]/90 text-white font-bold';
+        let latBgClass = 'bg-[#15803d] text-white font-bold';
         if (!isUp || sw.latency === 0) {
-          latBgClass = 'bg-slate-800 text-slate-400';
+          latBgClass = 'bg-slate-800 border border-slate-700 text-slate-400 font-medium';
         } else if (sw.latency > 30) {
-          latBgClass = 'bg-[#b91c1c] text-white font-bold';
+          latBgClass = 'bg-[#dc2626] text-white font-bold';
         } else if (sw.latency > 15) {
           latBgClass = 'bg-[#ea580c] text-white font-bold';
         }
 
-        let tempBgClass = 'bg-[#15803d]/90 text-white font-bold';
+        let tempBgClass = 'bg-[#15803d] text-white font-bold';
         if (sw.temp === 0) {
-          tempBgClass = 'bg-slate-800 text-slate-400';
+          tempBgClass = 'bg-slate-800 border border-slate-700 text-slate-400 font-medium';
         } else if (sw.temp > 65) {
           tempBgClass = 'bg-[#dc2626] text-white font-bold';
         } else if (sw.temp >= 40) {
@@ -909,55 +909,55 @@ class WidgetRegistry {
         else if (memPct > 50) memBarColor = 'bg-gradient-to-r from-emerald-500 to-amber-500';
 
         return `
-          <tr class="hover:bg-white/[0.03] transition-colors group font-mono text-[11px]">
-            <td class="py-2 px-3 font-semibold text-slate-200 whitespace-nowrap">
+          <tr class="hover:bg-slate-800/50 transition-colors group font-mono text-[11px]">
+            <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap">
               <div class="flex items-center gap-2">
-                <span class="truncate max-w-[170px]" title="${sw.name}">${sw.name}</span>
-                <span class="text-[9px] text-slate-500 font-normal">(${sw.ip})</span>
+                <span class="truncate max-w-[180px]" title="${sw.name}">${sw.name}</span>
+                <span class="text-[10px] text-slate-300 font-semibold">(${sw.ip})</span>
               </div>
             </td>
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
-              <span class="inline-block w-16 py-1 rounded text-[11px] font-bold tracking-wide uppercase ${isUp ? 'bg-[#15803d] text-white' : 'bg-[#b91c1c] text-white animate-pulse'}">
+              <span class="inline-block w-16 py-1 rounded text-[11px] font-black tracking-wide uppercase shadow-sm ${isUp ? 'bg-[#16a34a] text-white' : 'bg-[#dc2626] text-white animate-pulse'}">
                 ${isUp ? 'Up' : 'Down'}
               </span>
             </td>
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
-              <span class="inline-block px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/60 font-mono text-[11px] text-cyan-300 font-semibold tracking-wider">
+              <span class="inline-block px-2.5 py-1 rounded bg-slate-800 border border-slate-600 font-mono text-[11px] text-cyan-300 font-bold tracking-wider shadow-sm">
                 ${sw.serial || '-'}
               </span>
             </td>
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
-              <span class="inline-block w-20 py-1 rounded text-[11px] ${latBgClass}">
+              <span class="inline-block w-20 py-1 rounded text-[11px] shadow-sm ${latBgClass}">
                 ${sw.latency > 0 ? sw.latency.toFixed(1) + ' ms' : '-'}
               </span>
             </td>
             <td class="py-2 px-3 whitespace-nowrap">
               <div class="flex items-center gap-2">
-                <div class="w-24 h-4 bg-slate-900 rounded overflow-hidden border border-white/5 p-0.5">
+                <div class="w-24 h-4 bg-slate-800 rounded overflow-hidden border border-slate-700 p-0.5 shadow-inner">
                   <div class="h-full ${cpuBarColor} rounded-sm transition-all duration-300" style="width: ${cpuPct}%"></div>
                 </div>
-                <span class="text-slate-300 font-bold w-10 text-right">${sw.cpu}%</span>
+                <span class="text-white font-bold w-11 text-right text-xs">${sw.cpu}%</span>
               </div>
             </td>
             <td class="py-2 px-3 whitespace-nowrap">
               <div class="flex items-center gap-2">
-                <div class="w-24 h-4 bg-slate-900 rounded overflow-hidden border border-white/5 p-0.5">
+                <div class="w-24 h-4 bg-slate-800 rounded overflow-hidden border border-slate-700 p-0.5 shadow-inner">
                   <div class="h-full ${memBarColor} rounded-sm transition-all duration-300" style="width: ${memPct}%"></div>
                 </div>
-                <span class="text-slate-300 font-bold w-12 text-right">${sw.memory > 0 ? sw.memory.toFixed(1) + '%' : '-'}</span>
+                <span class="text-white font-bold w-12 text-right text-xs">${sw.memory > 0 ? sw.memory.toFixed(1) + '%' : '-'}</span>
               </div>
             </td>
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
-              <span class="inline-block w-20 py-1 rounded text-[11px] ${tempBgClass}">
+              <span class="inline-block w-20 py-1 rounded text-[11px] shadow-sm ${tempBgClass}">
                 ${sw.temp > 0 ? sw.temp.toFixed(1) + ' °C' : '-'}
               </span>
             </td>
             <td class="py-1.5 px-2 text-center whitespace-nowrap">
-              <span class="inline-block px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/60 font-mono text-[11px] text-amber-300 font-semibold" title="${sw.os_version || '-'}">
+              <span class="inline-block px-2.5 py-1 rounded bg-slate-800 border border-slate-600 font-mono text-[11px] text-amber-300 font-bold shadow-sm" title="${sw.os_version || '-'}">
                 ${sw.os_version || '-'}
               </span>
             </td>
-            <td class="py-2 px-3 text-right text-slate-300 font-medium whitespace-nowrap">
+            <td class="py-2 px-3 text-right text-slate-200 font-bold whitespace-nowrap">
               ${sw.uptime}
             </td>
           </tr>
